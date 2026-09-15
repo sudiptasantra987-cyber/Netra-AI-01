@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#F1F6FC] text-[#071426] font-sans antialiased;
+  }
+}
+
+/* Netra AI Healthcare Card Styles */
+.card-clean {
+  @apply bg-white rounded-2xl border border-slate-200/90 shadow-[0_2px_12px_rgba(7,20,38,0.04)] transition-all;
+}
+
+.card-clean-hover {
+  @apply bg-white rounded-2xl border border-slate-200/90 shadow-[0_2px_12px_rgba(7,20,38,0.04)] hover:shadow-md hover:border-[#19C7E8]/70 transition-all;
+}
+
+/* Form inputs */
+.input-clean {
+  @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-[#071426] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#19C7E8] focus:border-[#0756B8] transition-all;
+}
+
+/* Button utility classes */
+.btn-primary {
+  @apply px-5 py-2.5 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#19C7E8] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply px-5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-[#F1F6FC] text-[#071426] font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[#19C7E8] disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-gradient {
+  @apply px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0756B8] to-[#0eaac9] hover:from-[#054494] hover:to-[#0bb3d4] text-white font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#19C7E8] focus:ring-offset-2;
+}
+
+/* Backward compatibility glass-panel */
+.glass-panel {
+  @apply bg-white rounded-2xl border border-slate-200/90 shadow-sm;
+}
+
+.glass-panel-glow {
+  @apply bg-white rounded-3xl border border-[#19C7E8]/40 shadow-md;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F6FC;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0756B8;
+}
