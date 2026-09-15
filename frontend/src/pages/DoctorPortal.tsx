@@ -21,7 +21,11 @@ import {
 import { api } from '../services/api';
 import { AppointmentRecord, ScreeningResult } from '../types';
 
-export const DoctorPortal: React.FC = () => {
+interface DoctorPortalProps {
+  setActiveTab?: (tab: string) => void;
+}
+
+export const DoctorPortal: React.FC<DoctorPortalProps> = ({ setActiveTab }) => {
   const [doctorId] = useState<string>('doc-01'); // Dr. Ananya Sengupta
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [selectedApt, setSelectedApt] = useState<AppointmentRecord | null>(null);
@@ -245,11 +249,21 @@ export const DoctorPortal: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#0756B8] border border-blue-200">
             <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-[#0756B8]" />
             ABDM Verified Clinician
           </span>
+
+          {setActiveTab && (
+            <button
+              onClick={() => setActiveTab('screening')}
+              className="px-4 py-1.5 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 focus:outline-none focus:ring-2 focus:ring-[#19C7E8]"
+            >
+              <Eye className="w-3.5 h-3.5 text-[#19C7E8]" />
+              <span>New Patient Screening</span>
+            </button>
+          )}
         </div>
       </div>
 

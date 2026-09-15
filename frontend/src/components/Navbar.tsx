@@ -50,17 +50,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, hasResu
               Home
             </button>
 
-            <button
-              onClick={() => setActiveTab('screening')}
-              className={`px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-1.5 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
-                activeTab === 'screening' 
-                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-bold shadow-md shadow-cyan-900/40' 
-                  : 'text-cyan-300 hover:text-white hover:bg-slate-800/60 font-semibold'
-              }`}
-            >
-              <Eye className="w-4 h-4" />
-              <span>Eye Screening</span>
-            </button>
+            {user?.role !== 'patient' && (
+              <button
+                onClick={() => setActiveTab('screening')}
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-1.5 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
+                  activeTab === 'screening' 
+                    ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-bold shadow-md shadow-cyan-900/40' 
+                    : 'text-cyan-300 hover:text-white hover:bg-slate-800/60 font-semibold'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                <span>Eye Screening</span>
+              </button>
+            )}
 
             {hasResult && (
               <button

@@ -42,9 +42,11 @@ const MainApp: React.FC = () => {
         else setActiveTab('home');
       } else if (!user) {
         setActiveTab('login');
+      } else if (user?.role === 'patient' && activeTab === 'screening') {
+        setActiveTab('dashboard');
       }
     }
-  }, [user, isLoadingSession]);
+  }, [user, isLoadingSession, activeTab]);
 
   const handleLoginSuccess = (loggedInUser: any) => {
     if (loggedInUser.role === 'doctor') {
@@ -199,10 +201,14 @@ const MainApp: React.FC = () => {
           )}
 
           {activeTab === 'screening' && (
-            <ScreeningStudio 
-              onAnalysisComplete={handleAnalysisComplete} 
-              onBack={() => setActiveTab('dashboard')}
-            />
+            user?.role === 'patient' ? (
+              <PatientDashboard setActiveTab={setActiveTab} />
+            ) : (
+              <ScreeningStudio 
+                onAnalysisComplete={handleAnalysisComplete} 
+                onBack={() => setActiveTab(user?.role === 'doctor' ? 'doctor-portal' : 'dashboard')}
+              />
+            )
           )}
 
           {activeTab === 'result' && (
@@ -221,12 +227,14 @@ const MainApp: React.FC = () => {
                 <p className="text-xs text-slate-500">
                   Please upload a fundus photograph or perform a screening to generate AI diagnostic predictions and Grad-CAM saliency heatmaps.
                 </p>
-                <button
-                  onClick={() => setActiveTab('screening')}
-                  className="px-6 py-2.5 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white font-semibold text-xs shadow-md transition-all"
-                >
-                  Start New Screening
-                </button>
+                {user?.role !== 'patient' && (
+                  <button
+                    onClick={() => setActiveTab('screening')}
+                    className="px-6 py-2.5 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white font-semibold text-xs shadow-md transition-all"
+                  >
+                    Start New Screening
+                  </button>
+                )}
               </div>
             )
           )}
@@ -245,7 +253,7 @@ const MainApp: React.FC = () => {
           {(activeTab === 'reports' || activeTab === 'trends') && (
             <HistoryTrends 
               onBack={() => setActiveTab('dashboard')} 
-              onStartScreening={() => setActiveTab('screening')}
+              onStartScreening={user?.role !== 'patient' ? () => setActiveTab('screening') : undefined}
             />
           )}
 
@@ -254,7 +262,7 @@ const MainApp: React.FC = () => {
           )}
 
           {activeTab === 'doctor-portal' && (
-            <DoctorPortal />
+            <DoctorPortal setActiveTab={setActiveTab} />
           )}
 
           {activeTab === 'admin' && (

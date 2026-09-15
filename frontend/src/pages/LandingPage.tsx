@@ -15,12 +15,14 @@ import {
   PhoneCall,
   Leaf
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface LandingPageProps {
   setActiveTab: (tab: string) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab }) => {
+  const { user } = useAuth();
   return (
     <div className="space-y-16 py-6 animate-fade-in">
       {/* Hero Section matching Screen 1 */}
@@ -49,9 +51,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab }) => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
               <div className="flex items-center space-x-2 p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
                 <div className="w-7 h-7 rounded-lg bg-[#edf5ff] text-[#0756B8] flex items-center justify-center shrink-0">
-                  <Eye className="w-4 h-4" />
+                  {user?.role === 'patient' ? <FileText className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </div>
-                <span className="text-xs font-bold text-[#071426]">AI Screening</span>
+                <span className="text-xs font-bold text-[#071426]">
+                  {user?.role === 'patient' ? 'Clinical Reports' : 'AI Screening'}
+                </span>
               </div>
 
               <div className="flex items-center space-x-2 p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
@@ -79,10 +83,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab }) => {
             {/* CTA Buttons */}
             <div className="flex items-center space-x-4 pt-2">
               <button
-                onClick={() => setActiveTab('screening')}
+                onClick={() => setActiveTab(user?.role === 'patient' ? 'dashboard' : 'screening')}
                 className="px-8 py-3.5 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white font-bold text-sm shadow-md shadow-[#0756B8]/25 hover:scale-102 transition-all flex items-center space-x-2 focus:outline-none focus:ring-4 focus:ring-[#19C7E8]/40"
               >
-                <span>Get Started</span>
+                <span>{user?.role === 'patient' ? 'Open Dashboard' : 'Get Started'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -90,7 +94,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab }) => {
                 onClick={() => setActiveTab('doctors')}
                 className="px-6 py-3.5 rounded-xl bg-white hover:bg-[#F1F6FC] text-[#071426] font-bold text-sm border border-slate-300 transition-all hover:border-slate-400"
               >
-                Learn More
+                Find Specialists
               </button>
             </div>
           </div>

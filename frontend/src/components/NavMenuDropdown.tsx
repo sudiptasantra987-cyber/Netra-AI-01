@@ -66,12 +66,6 @@ export const NavMenuDropdown: React.FC<NavMenuDropdownProps> = ({
       icon: User
     },
     {
-      id: 'screening',
-      label: 'New Screening',
-      description: 'Upload & analyze retinal fundus images',
-      icon: Eye
-    },
-    {
       id: 'chat',
       label: 'AI Assistant',
       description: 'Interactive ophthalmic chatbot triage',
@@ -98,6 +92,13 @@ export const NavMenuDropdown: React.FC<NavMenuDropdownProps> = ({
     // Optional role-specific links for doctor/admin users
     ...(user?.role === 'doctor' || user?.role === 'admin'
       ? [
+          {
+            id: 'screening',
+            label: 'New Screening',
+            description: 'Upload & analyze retinal fundus images',
+            icon: Eye,
+            roleFilter: ['doctor', 'admin']
+          },
           {
             id: 'doctor-portal',
             label: 'Doctor Portal',

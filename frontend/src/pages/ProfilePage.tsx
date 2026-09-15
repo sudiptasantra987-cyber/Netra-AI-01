@@ -589,7 +589,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ setActiveTab }) => {
               <span>Direct Care Access</span>
             </h4>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Quickly jump to your main patient dashboard, schedule an eye screening, or consult verified eye doctors.
+              {user?.role === 'patient' 
+                ? 'Quickly jump to your patient dashboard, clinical reports, or consult verified eye doctors.' 
+                : 'Quickly jump to your main dashboard, clinical screening tools, or manage patient consultations.'}
             </p>
 
             <div className="space-y-2 pt-2 text-xs font-semibold">
@@ -602,18 +604,28 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ setActiveTab }) => {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('dashboard')}
+                onClick={() => setActiveTab(user?.role === 'doctor' ? 'doctor-portal' : 'dashboard')}
                 className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 transition-colors text-center cursor-pointer"
               >
-                Patient Dashboard
+                {user?.role === 'doctor' ? 'Doctor Portal' : 'Patient Dashboard'}
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('screening')}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 transition-colors text-center cursor-pointer"
-              >
-                Start New Screening
-              </button>
+              {user?.role === 'patient' ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('reports')}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 transition-colors text-center cursor-pointer"
+                >
+                  My Clinical Reports
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('screening')}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 transition-colors text-center cursor-pointer"
+                >
+                  Start New Screening
+                </button>
+              )}
             </div>
           </div>
         </div>

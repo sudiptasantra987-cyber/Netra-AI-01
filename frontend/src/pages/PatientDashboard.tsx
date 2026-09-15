@@ -134,24 +134,24 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
                 ? 'Early signs or mild vascular variation observed. Regular tracking and specialist checkup recommended.'
                 : 'Retinal physiology within healthy parameters. Maintain regular annual checkups.'
             ) : (
-              'You have not completed an AI eye screening yet. Upload or scan a fundus photograph to assess diabetic retinopathy, glaucoma, and cataract risks.'
+              'No retinal scan records on file yet. Consult your eye care specialist or ophthalmologist to conduct a comprehensive ocular evaluation and view your reports here.'
             )}
           </p>
 
           <button
-            onClick={() => setActiveTab(hasLatestResult ? 'result' : 'screening')}
+            onClick={() => setActiveTab('reports')}
             className="text-xs font-bold text-[#0756B8] hover:text-[#054494] flex items-center space-x-1 pt-1 group"
           >
-            <span>{hasLatestResult ? 'View Detailed Report' : 'Take New Screening'}</span>
+            <span>{hasLatestResult ? 'View Detailed Report' : 'View Report History'}</span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
 
         {/* Right: Circular Eye Preview Thumbnail matching Screen 3 */}
         <div 
-          onClick={() => setActiveTab(hasLatestResult ? 'result' : 'screening')}
+          onClick={() => setActiveTab('reports')}
           className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-md bg-[#071426] shrink-0 cursor-pointer group flex items-center justify-center text-center"
-          title={hasLatestResult ? 'Click to view full diagnosis' : 'Click to start new scan'}
+          title={hasLatestResult ? 'Click to view full diagnosis' : 'Click to view report records'}
         >
           {previewImage ? (
             <>
@@ -167,8 +167,8 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
             </>
           ) : (
             <div className="p-2 text-slate-400 flex flex-col items-center space-y-1">
-              <Eye className="w-8 h-8 text-[#19C7E8] group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold text-slate-300">Start Scan</span>
+              <FileText className="w-7 h-7 text-[#19C7E8] group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold text-slate-300">Reports</span>
             </div>
           )}
         </div>
@@ -176,20 +176,20 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
 
       {/* 4 Quick Action Cards matching Screen 3 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: New Eye Screening */}
+        {/* Card 1: My Appointments */}
         <button
-          onClick={() => setActiveTab('screening')}
+          onClick={() => setActiveTab('appointments')}
           className="card-clean-hover p-5 text-left flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-[#19C7E8]"
         >
           <div className="w-10 h-10 rounded-xl bg-[#edf5ff] text-[#0756B8] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-[#bcdbff]">
-            <Eye className="w-5 h-5" />
+            <Calendar className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-[#071426] group-hover:text-[#0756B8] transition-colors">
-              New Eye Screening
+              My Appointments
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Upload or capture eye image
+              Check consultations & slots
             </p>
           </div>
         </button>

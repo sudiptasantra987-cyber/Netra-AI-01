@@ -1,5 +1,6 @@
 import React from 'react';
-import { Home, FileText, Camera, Bot, User } from 'lucide-react';
+import { Home, FileText, Camera, Bot, User, Stethoscope } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface MobileNavProps {
   activeTab: string;
@@ -7,6 +8,9 @@ interface MobileNavProps {
 }
 
 export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab }) => {
+  const { user } = useAuth();
+  const isDoctorOrAdmin = user?.role === 'doctor' || user?.role === 'admin';
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/90 px-4 py-2 z-50 flex items-center justify-around shadow-lg">
       <button
@@ -19,6 +23,19 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
         <span>Home</span>
       </button>
 
+      {/* For patients, show Doctor Discovery tab; for doctors, show Reports */}
+      {!isDoctorOrAdmin ? (
+        <button
+          onClick={() => setActiveTab('doctors')}
+          className={`flex flex-col items-center space-y-1 text-xs font-semibold transition-colors ${
+            activeTab === 'doctors' ? 'text-[#0756B8]' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <Stethoscope className="w-5 h-5" />
+          <span>Doctors</span>
+        </button>
+      ) : null}
+
       <button
         onClick={() => setActiveTab('reports')}
         className={`flex flex-col items-center space-y-1 text-xs font-semibold transition-colors ${
@@ -29,17 +46,19 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
         <span>Reports</span>
       </button>
 
-      {/* Primary Center Action Button */}
-      <button
-        onClick={() => setActiveTab('screening')}
-        className="flex flex-col items-center -mt-6 focus:outline-none"
-        aria-label="Start Eye Scan"
-      >
-        <div className="w-12 h-12 rounded-full bg-[#0756B8] text-white flex items-center justify-center shadow-lg shadow-[#0756B8]/35 border-4 border-white hover:bg-[#054494] transition-all scale-105 ring-2 ring-[#19C7E8]/50">
-          <Camera className="w-5 h-5" />
-        </div>
-        <span className="text-[11px] font-bold text-[#0756B8] mt-1">Scan</span>
-      </button>
+      {/* Primary Center Action Button (Doctors & Admins ONLY) */}
+      {isDoctorOrAdmin && (
+        <button
+          onClick={() => setActiveTab('screening')}
+          className="flex flex-col items-center -mt-6 focus:outline-none"
+          aria-label="Start Eye Scan"
+        >
+          <div className="w-12 h-12 rounded-full bg-[#0756B8] text-white flex items-center justify-center shadow-lg shadow-[#0756B8]/35 border-4 border-white hover:bg-[#054494] transition-all scale-105 ring-2 ring-[#19C7E8]/50">
+            <Camera className="w-5 h-5" />
+          </div>
+          <span className="text-[11px] font-bold text-[#0756B8] mt-1">Scan</span>
+        </button>
+      )}
 
       <button
         onClick={() => setActiveTab('chat')}

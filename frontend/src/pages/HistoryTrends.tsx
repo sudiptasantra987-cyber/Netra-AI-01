@@ -224,10 +224,12 @@ export const HistoryTrends: React.FC<HistoryTrendsProps> = ({
           <div className="space-y-1.5">
             <h3 className="text-lg font-bold text-[#071426]">No Scan Reports Found</h3>
             <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-              You haven't completed any retinal scans yet. When you upload or capture a fundus image in the screening studio, your diagnostic results, Grad-CAM heatmaps, and medical reports will be saved here securely.
+              {user?.role === 'doctor' || user?.role === 'admin'
+                ? "You haven't completed any retinal scans yet. Upload or capture a fundus image in the screening studio to generate diagnostic results, Grad-CAM heatmaps, and medical reports."
+                : "No retinal scan reports on file yet. When an authorized eye care specialist conducts an ocular screening, your diagnostic results, Grad-CAM heatmaps, and medical reports will be saved here securely."}
             </p>
           </div>
-          {onStartScreening && (
+          {onStartScreening && (user?.role === 'doctor' || user?.role === 'admin') && (
             <button
               type="button"
               onClick={onStartScreening}

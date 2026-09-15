@@ -72,7 +72,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'screening',
       label: 'New Screening',
       icon: Eye,
-      roles: ['patient', 'doctor', 'admin']
+      roles: ['doctor', 'admin'],
+      badge: 'Doctor'
     },
     {
       id: 'chat',
