@@ -29,26 +29,44 @@
 
 ---
 
-## 🚀 Quick Start Instructions
+## 🚀 Quick Start Instructions (IDE & One-Click Run)
 
 ### Prerequisites
 - **Python 3.10+** (Tested on Python 3.14)
 - **Node.js 18+** & **npm**
 
-### Step 1: Start Backend API
-```bash
-# From workspace root
-python backend/app/main.py
-```
-*Backend runs on `http://127.0.0.1:8000` with Swagger documentation at `http://127.0.0.1:8000/docs`.*
+---
 
-### Step 2: Start Frontend Application
+### Option A: Run in VS Code / Antigravity IDE (Recommended)
+1. **F5 / Run & Debug**:
+   - Press **F5** or open the **Run & Debug** panel (`Ctrl+Shift+D`).
+   - Select **▶ Run Netra AI: Fullstack (run.py)** and click Start.
+   - Both backend and frontend will start, and your browser will open automatically at `http://localhost:5173`.
+2. **Right-Click Run**:
+   - Open `run.py` and click the **▷ Play** button in the top-right corner of the editor.
+3. **IDE Task**:
+   - Open Command Palette (`Ctrl+Shift+P`) ➜ `Tasks: Run Task` ➜ `▶ Start All (Backend + Frontend)`.
+
+---
+
+### Option B: Run via Python / Terminal
 ```bash
-# In a new terminal tab
+# Runs both FastAPI backend (port 8000) and Vite frontend (port 5173) together
+python run.py
+```
+*Or on Windows double-click `run_project.bat` or run `./run_project.ps1` in PowerShell.*
+
+---
+
+### Option C: Run Services Individually
+```bash
+# Terminal 1: Backend API (http://127.0.0.1:8000)
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --app-dir backend
+
+# Terminal 2: Frontend App (http://localhost:5173)
 cd frontend
 npm run dev
 ```
-*Frontend runs on `http://localhost:5173` with automatic API proxy to backend.*
 
 ---
 

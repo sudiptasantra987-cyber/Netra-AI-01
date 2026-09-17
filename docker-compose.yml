@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  netra-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: netra-ai-platform
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - PORT=8000
+      - HOST=0.0.0.0
+      - SECRET_KEY=netra-ai-production-secret-change-in-env-2026
+      - ALLOWED_ORIGINS=*
+      - DATABASE_FILE=/app/database/netra_store.json
+      - UPLOADS_DIR=/app/backend/uploads
+    volumes:
+      # Persistent storage for user records, screenings & appointments
+      - netra-database-data:/app/database
+      # Persistent storage for uploaded fundus retinal images & Grad-CAM outputs
+      - netra-uploads-data:/app/backend/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  netra-database-data:
+    driver: local
+  netra-uploads-data:
+    driver: local

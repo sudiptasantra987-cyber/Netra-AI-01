@@ -1,0 +1,137 @@
+{
+  "users": [
+    {
+      "id": "pat-01",
+      "email": "patient@netra.ai",
+      "password_hash": "$2b$12$Bpff0q.AUaEfjVDHvY09qOEUDpuCkavBxmiGq0y5.fIPCjp9pWWZS",
+      "name": "Sunita Roy",
+      "role": "patient",
+      "age": 48,
+      "gender": "Female",
+      "phone": "+91 98301 23456",
+      "city": "Kolkata",
+      "specialization": null
+    },
+    {
+      "id": "doc-01",
+      "email": "doctor@netra.ai",
+      "password_hash": "$2b$12$IYPiT7Nh3KCkL5MyMjrRXu67kM8an9Tda7e.82B7N.iy06r3gnYHy",
+      "name": "Dr. Ananya Sengupta",
+      "role": "doctor",
+      "age": 44,
+      "gender": "Female",
+      "phone": "+91 98310 98765",
+      "city": "Kolkata",
+      "specialization": "Vitreo-Retinal Surgeon"
+    },
+    {
+      "id": "admin-01",
+      "email": "admin@netra.ai",
+      "password_hash": "$2b$12$HLja0x7My08KuMURFe2sgOvPiq5kZAeXpg8v9Hir0TMdg/YkzEyt.",
+      "name": "Netra Admin",
+      "role": "admin",
+      "age": 35,
+      "gender": "Other",
+      "phone": "+91 99999 88888",
+      "city": "New Delhi",
+      "specialization": "Clinical AI Governance"
+    },
+    {
+      "id": "usr-9a08e6f5",
+      "email": "sudiptasantra987@gmail.com",
+      "password_hash": "$2b$12$AB8WNkS1ZwJoXZj1XorjzuGVl6EldyzLYpdAiKbuIW/R8QZb6LxC.",
+      "name": "sudipta santra",
+      "role": "doctor",
+      "age": null,
+      "gender": null,
+      "phone": null,
+      "city": null,
+      "specialization": null
+    }
+  ],
+  "screenings": [
+    {
+      "screening_id": "scr-baseline-01",
+      "patient_id": "pat-01",
+      "patient_name": "Sunita Roy",
+      "timestamp": "2026-06-15T10:30:00",
+      "date": "2026-06-15",
+      "image_url": "/sample_images/normal_retina.jpg",
+      "primary_condition": "Normal Eye Anatomy",
+      "primary_confidence": 91.5,
+      "risk_level": "Low Risk",
+      "risk_score": 12.0,
+      "clinical_recommendation": "Baseline fundus examination normal. Annual follow-up advised.",
+      "quality": {
+        "sharpness_score": 92.0,
+        "brightness_score": 58.0,
+        "contrast_score": 68.0,
+        "noise_level": 8.0,
+        "resolution_ok": true,
+        "width": 1024,
+        "height": 1024,
+        "composite_quality": 89.5,
+        "is_suitable": true,
+        "status_label": "Excellent",
+        "rejection_reasons": [],
+        "guidance": "High quality baseline image."
+      },
+      "gradcam_image_base64": null,
+      "affected_quadrants": [
+        "Uniform Physiological Distribution"
+      ]
+    }
+  ],
+  "appointments": [
+    {
+      "appointment_id": "apt-seed-101",
+      "patient_id": "pat-01",
+      "patient_name": "Sunita Roy",
+      "doctor_id": "doc-01",
+      "doctor_name": "Dr. Ananya Sengupta",
+      "doctor_specialization": "Vitreo-Retinal Surgeon",
+      "hospital": "Sankara Nethralaya",
+      "date": "2026-09-15",
+      "time_slot": "10:15 AM",
+      "status": "Confirmed",
+      "reason": "Preventative diabetic retinal evaluation",
+      "screening_id": "scr-baseline-01",
+      "screening_summary": "Normal Eye Anatomy (Low Risk, 12.0 Score)",
+      "doctor_notes": "Initial consultation booked. Dilated fundoscopy planned.",
+      "created_at": "2026-09-17T19:19:31.717825"
+    }
+  ],
+  "reports": [],
+  "password_resets": [],
+  "profiles": [
+    {
+      "profile_id": "prf-4f25f1ff",
+      "user_id": "usr-9a08e6f5",
+      "full_name": "sudipta santra",
+      "profile_picture": "",
+      "date_of_birth": "",
+      "gender": "",
+      "address": "",
+      "city": "",
+      "state": "",
+      "pin_code": "",
+      "bio": "",
+      "created_at": "2026-09-17T19:36:06.653728",
+      "updated_at": "2026-09-17T19:36:06.653778"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-f339ae87",
+      "user_id": "usr-9a08e6f5",
+      "title": "Complete Your Profile",
+      "message": "Welcome! Please complete your profile details to get started.",
+      "type": "profile_completion",
+      "is_read": false,
+      "created_at": "2026-09-17T19:36:06.655495",
+      "action_url": "/profile"
+    }
+  ],
+  "abdm_cards": [],
+  "otp_records": []
+}

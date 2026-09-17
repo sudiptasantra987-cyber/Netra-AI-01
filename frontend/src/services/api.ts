@@ -14,7 +14,22 @@ import {
   ResearchMetrics
 } from '../types';
 
-const API_BASE = '/api';
+// Production Base URL: In unified mode (default), calls are made to same-origin '/api'.
+// In decoupled mode (e.g. Vercel frontend + Render backend), VITE_API_BASE_URL specifies the remote server.
+const rawBase = ((import.meta as any).env?.VITE_API_BASE_URL || '').replace(/\/$/, '');
+export const API_BASE = `${rawBase}/api`;
+
+/**
+ * Resolves static media URLs (e.g. /uploads/image.jpg) for both unified and decoupled deployments.
+ */
+export function getAssetUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${rawBase}${cleanPath}`;
+}
 
 function getHeaders(isFormData = false): Record<string, string> {
   const headers: Record<string, string> = {};

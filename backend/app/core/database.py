@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
 from app.core.security import hash_password
+from app.core.config import settings
 
-DB_FILE = Path(__file__).resolve().parent.parent.parent / "database" / "netra_store.json"
+DB_FILE = settings.DATABASE_FILE
 DB_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 class NetraDatabase:

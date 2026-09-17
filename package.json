@@ -1,0 +1,16 @@
+{
+  "name": "netra-ai-workspace",
+  "version": "1.0.0",
+  "description": "Netra AI - Clinical Eye Screening and Care Navigation Platform",
+  "scripts": {
+    "start": "python run.py",
+    "dev": "python run.py",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
+    "build": "cd frontend && npm run build",
+    "install:all": "pip install -r backend/requirements.txt && cd frontend && npm install"
+  },
+  "keywords": ["healthcare", "ai", "fastapi", "react", "retinal-screening"],
+  "author": "",
+  "license": "MIT"
+}
