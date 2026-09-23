@@ -31,7 +31,10 @@ const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>(() => {
     const token = localStorage.getItem('netra_token');
     if (!token) return 'login';
-    const hash = window.location.hash.replace('#', '').trim();
+    const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+    const hash = (rawHash === 'find-doctor' || rawHash === 'patient/find-doctor' || rawHash === 'patient-find-doctor')
+      ? 'doctors'
+      : rawHash;
     if (hash && hash !== 'login') return hash;
     const saved = localStorage.getItem('netra_active_tab');
     return saved && saved !== 'login' ? saved : 'home';
@@ -60,7 +63,10 @@ const MainApp: React.FC = () => {
   // Listen to manual URL hash changes and enforce RBAC
   useEffect(() => {
     const onHashChange = () => {
-      const hash = window.location.hash.replace('#', '').trim();
+      const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+      const hash = (rawHash === 'find-doctor' || rawHash === 'patient/find-doctor' || rawHash === 'patient-find-doctor')
+        ? 'doctors'
+        : rawHash;
       if (!hash || hash === 'login') return;
       if (!user) {
         setActiveTab('login');
@@ -72,7 +78,7 @@ const MainApp: React.FC = () => {
         window.location.hash = `#${target}`;
         return;
       }
-      if (user.role === 'patient' && hash.startsWith('doctor')) {
+      if (user.role === 'patient' && hash.startsWith('doctor-')) {
         setActiveTab('home');
         window.location.hash = '#home';
         return;
@@ -101,7 +107,7 @@ const MainApp: React.FC = () => {
         const target = user.role === 'doctor' ? 'doctor-portal' : 'home';
         setActiveTab(target);
         window.location.hash = `#${target}`;
-      } else if (user?.role === 'patient' && activeTab.startsWith('doctor')) {
+      } else if (user?.role === 'patient' && activeTab.startsWith('doctor-')) {
         // Prevent patient accessing doctor routes directly
         setActiveTab('home');
         window.location.hash = '#home';
