@@ -85,5 +85,5 @@ model_validation_roc.m
 | Role | Email | Password | Pre-loaded Context |
 |---|---|---|---|
 | **Patient** | `demo-patient@netra.ai` | `Available during live demo` | Default patient demo account (unpopulated profile) |
-| **Doctor** | `doctor@netra.ai` | `Available during live demo` | Dr. Ananya Sengupta (Vitreo-Retinal Surgeon, Sankara Nethralaya) |
+| **Doctor** | `doctor@netra.ai` | `Available during live demo` | specialist doctor |
 | **Admin** | `Available during live demo` | `Available during live demo` | Sudipta Santra (Lead Administrator, Sole Admin Access) |
