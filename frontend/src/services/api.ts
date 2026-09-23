@@ -485,13 +485,15 @@ export const api = {
     lng?: number;
     city?: string;
     condition?: string;
+    q?: string;
     date?: string;
   }): Promise<DoctorProfile[]> {
     const query = new URLSearchParams();
     if (params.lat !== undefined) query.set('lat', String(params.lat));
     if (params.lng !== undefined) query.set('lng', String(params.lng));
-    if (params.city) query.set('city', params.city);
-    if (params.condition) query.set('condition', params.condition);
+    if (params.city && params.city !== 'All') query.set('city', params.city);
+    if (params.condition && params.condition !== 'All') query.set('condition', params.condition);
+    if (params.q && params.q.trim()) query.set('q', params.q.trim());
     if (params.date) query.set('date', params.date);
 
     const res = await fetch(`${API_BASE}/doctors/search?${query.toString()}`);

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional, List
-from app.services.doctor_recommender import find_and_rank_doctors, get_slots_for_doctor, DOCTORS_DATABASE
+from app.services.doctor_recommender import find_and_rank_doctors, get_slots_for_doctor, get_combined_doctors, DOCTORS_DATABASE
 from app.models.schema import DoctorProfile, DoctorAvailabilitySlot
 
 router = APIRouter(prefix="/doctors", tags=["Ophthalmologists"])
@@ -11,6 +11,7 @@ def search_doctors(
     lng: Optional[float] = Query(None, description="Patient longitude"),
     city: Optional[str] = Query(None, description="Filter by Indian city"),
     condition: Optional[str] = Query(None, description="Diagnosed condition to match specialty"),
+    q: Optional[str] = Query(None, description="Free-text search query"),
     date: Optional[str] = Query(None, description="Target consultation date")
 ):
     results = find_and_rank_doctors(
@@ -18,13 +19,15 @@ def search_doctors(
         user_lng=lng,
         city_filter=city,
         condition_match=condition,
+        query_text=q,
         query_date=date
     )
     return results
 
 @router.get("/{doc_id}", response_model=DoctorProfile)
 def get_doctor(doc_id: str, lat: Optional[float] = None, lng: Optional[float] = None):
-    for doc in DOCTORS_DATABASE:
+    all_docs = get_combined_doctors()
+    for doc in all_docs:
         if doc["id"] == doc_id:
             ranked = find_and_rank_doctors(user_lat=lat, user_lng=lng)
             for r in ranked:

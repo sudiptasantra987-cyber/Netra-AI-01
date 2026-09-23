@@ -128,6 +128,40 @@ DOCTORS_DATABASE: List[Dict] = [
 # Track booked slots in-memory / database
 BOOKED_SLOTS: set = set()
 
+def get_combined_doctors() -> List[Dict]:
+    """Combines pre-seeded ophthalmology centers with verified registered doctor accounts"""
+    combined = [dict(d) for d in DOCTORS_DATABASE]
+    try:
+        from app.core.database import db
+        all_users = db.get_users()
+        for u in all_users:
+            if u.get("role") == "doctor" and u.get("status") != "inactive":
+                doc_id = u.get("id")
+                if not any(d["id"] == doc_id for d in combined):
+                    city = u.get("city") or "Kolkata"
+                    hospital = u.get("hospital") or "Netra AI Tele-Clinic Hub"
+                    spec = u.get("specialization") or "Comprehensive Eye Specialist"
+                    combined.append({
+                        "id": doc_id,
+                        "name": u.get("name") or "Specialist Doctor",
+                        "degrees": u.get("qualifications") or "MBBS, MS (Ophthalmology)",
+                        "specialization": spec,
+                        "hospital": hospital,
+                        "city": city,
+                        "address": u.get("address") or f"{hospital}, {city}",
+                        "latitude": 22.5726 if city.lower() == "kolkata" else 28.6139,
+                        "longitude": 88.3639 if city.lower() == "kolkata" else 77.2090,
+                        "experience_years": 12,
+                        "consultation_fee": 800,
+                        "rating": 4.9,
+                        "review_count": 160,
+                        "is_verified": u.get("verification_status") == "verified",
+                        "image_avatar": u.get("profile_picture") or "https://images.unsplash.com/photo-1594824813689-ff80d0d82992?w=150&auto=format&fit=crop&q=80"
+                    })
+    except Exception:
+        pass
+    return combined
+
 def calculate_haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance in kilometers between two geo-coordinates"""
     R = 6371.0  # Earth's radius in km
@@ -160,6 +194,7 @@ def find_and_rank_doctors(
     user_lng: Optional[float] = None,
     city_filter: Optional[str] = None,
     condition_match: Optional[str] = None,
+    query_text: Optional[str] = None,
     query_date: Optional[str] = None
 ) -> List[DoctorProfile]:
     import datetime
@@ -169,41 +204,61 @@ def find_and_rank_doctors(
     center_lat = user_lat if user_lat is not None else 28.6139
     center_lng = user_lng if user_lng is not None else 77.2090
     
+    all_doctors = get_combined_doctors()
     ranked_results = []
     
-    for doc in DOCTORS_DATABASE:
+    clean_q = (query_text or "").strip().lower()
+    
+    for doc in all_doctors:
         # Distance calculation
         dist = calculate_haversine_distance(center_lat, center_lng, doc["latitude"], doc["longitude"])
         
         # If user selected a specific city, allow filtering
-        if city_filter and city_filter.lower() != "all" and city_filter.lower() not in doc["city"].lower():
-            # If coordinates were provided, don't drop, just apply penalty; otherwise filter
-            if user_lat is None:
-                continue
+        if city_filter and city_filter.lower() != "all":
+            c_filter = city_filter.lower()
+            d_city = doc.get("city", "").lower()
+            d_addr = doc.get("address", "").lower()
+            if c_filter not in d_city and c_filter not in d_addr:
+                # If explicit city query without coords, apply strict filtering
+                if user_lat is None:
+                    continue
+
+        # Free-text keyword filter/boost if provided
+        query_boost = 0.0
+        if clean_q and clean_q not in ["all", "doctor", "doctors"]:
+            q_terms = [t for t in clean_q.split() if t not in ["in", "near", "me", "find", "eye", "specialist"]]
+            doc_text = f"{doc.get('name', '')} {doc.get('specialization', '')} {doc.get('hospital', '')} {doc.get('city', '')} {doc.get('address', '')}".lower()
+            if q_terms:
+                matched_terms = [t for t in q_terms if t in doc_text]
+                if not matched_terms:
+                    # If neither name nor city nor hospital matches, don't drop completely unless strictly searching city
+                    query_boost = -15.0
+                else:
+                    query_boost = len(matched_terms) * 12.0
 
         # Condition relevance score
         spec_match = 1.0
-        if condition_match:
+        if condition_match and condition_match.lower() != "all":
             cond_lower = condition_match.lower()
             spec_lower = doc["specialization"].lower()
-            if "retin" in cond_lower and "retin" in spec_lower:
+            if ("retin" in cond_lower or "dr" in cond_lower) and ("retin" in spec_lower or "diabetic" in spec_lower or "macular" in spec_lower):
                 spec_match = 2.5
             elif "glauc" in cond_lower and "glauc" in spec_lower:
                 spec_match = 2.5
             elif "cataract" in cond_lower and "cataract" in spec_lower:
                 spec_match = 2.5
-            elif "macular" in cond_lower or "amd" in cond_lower:
-                if "retin" in spec_lower or "macular" in spec_lower:
-                    spec_match = 2.5
+            elif "comprehensive" in spec_lower or "general" in spec_lower:
+                spec_match = 1.5
                     
         # Multi-factor intelligent ranking:
-        # Score = (1 / (1 + distance_in_km * 0.05)) * 40 + (rating * 8) + (spec_match * 15) + (experience * 0.5)
+        # Score = (1 / (1 + distance_in_km * 0.05)) * 40 + (rating * 8) + (spec_match * 15) + (experience * 0.5) + query_boost
         proximity_factor = 1.0 / (1.0 + (dist * 0.03))
         match_score = round(
             (proximity_factor * 45.0) +
             (doc["rating"] * 6.0) +
             (spec_match * 18.0) +
-            (min(20, doc["experience_years"]) * 0.5),
+            (min(20, doc["experience_years"]) * 0.5) +
+            query_boost,
             1
         )
         
