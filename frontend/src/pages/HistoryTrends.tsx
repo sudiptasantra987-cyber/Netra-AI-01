@@ -400,6 +400,60 @@ export const HistoryTrends: React.FC<HistoryTrendsProps> = ({
                 </div>
               ) : (
                 <>
+                  {/* Status Banner */}
+                  {(() => {
+                    const scr = fullReportData?.screening || activeReport;
+                    const isRev = scr?.review_status === 'reviewed' || scr?.status === 'Report Available';
+                    const isRecap = scr?.review_status === 'recapture_required' || scr?.status === 'Image Requires Recapture';
+                    const doc = scr?.reviewed_by || fullReportData?.reviewed_by;
+                    if (isRev) {
+                      return (
+                        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
+                          <div className="flex items-center space-x-2.5">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <div>
+                              <span className="font-bold text-sm block">Report Available</span>
+                              <span className="text-emerald-700">Clinical review finalized by {doc || 'Authorized Specialist'}</span>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            Finalized
+                          </span>
+                        </div>
+                      );
+                    } else if (isRecap) {
+                      return (
+                        <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between">
+                          <div className="flex items-center space-x-2.5">
+                            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+                            <div>
+                              <span className="font-bold text-sm block">Image Requires Recapture</span>
+                              <span className="text-red-700">{scr?.clinical_notes || 'Doctor requested a clearer retinal capture due to optical blur or illumination.'}</span>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-800 border border-red-300">
+                            Recapture
+                          </span>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between">
+                          <div className="flex items-center space-x-2.5">
+                            <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+                            <div>
+                              <span className="font-bold text-sm block">Awaiting Doctor Review</span>
+                              <span className="text-amber-700">Screening request submitted. Waiting in tele-ophthalmology review queue.</span>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-800 border border-amber-300">
+                            In Review Queue
+                          </span>
+                        </div>
+                      );
+                    }
+                  })()}
+
                   {/* Metadata Row */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#F1F6FC] rounded-2xl border border-blue-100 text-xs">
                     <div>
@@ -411,9 +465,11 @@ export const HistoryTrends: React.FC<HistoryTrendsProps> = ({
                       <span className="font-bold text-[#071426]">{formatTimestamp(activeReport.timestamp, activeReport.date)}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block font-medium">Risk Assessment</span>
-                      <span className={`inline-block font-bold px-2 py-0.5 rounded text-[10px] mt-0.5 ${getRiskColor(activeReport.risk_level)}`}>
-                        {activeReport.risk_level}
+                      <span className="text-slate-400 block font-medium">Gradability</span>
+                      <span className={`font-bold inline-block text-[10px] px-2 py-0.5 rounded mt-0.5 ${
+                        activeReport.is_gradable !== false ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
+                      }`}>
+                        {activeReport.is_gradable !== false ? 'Suitable / Gradable' : 'Requires Recapture'}
                       </span>
                     </div>
                     <div>
@@ -463,10 +519,10 @@ export const HistoryTrends: React.FC<HistoryTrendsProps> = ({
                     </div>
                   </div>
 
-                  {/* Primary Diagnosis & Predictions */}
+                  {/* AI-Generated Findings */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Diagnostic Findings
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center space-x-1.5">
+                      <span>🤖 AI Deep Learning Feature Triage (Preliminary)</span>
                     </h4>
                     <div className="p-4 bg-[#F1F6FC] rounded-2xl border border-blue-100 space-y-2">
                       <div className="flex items-center justify-between">
@@ -474,12 +530,12 @@ export const HistoryTrends: React.FC<HistoryTrendsProps> = ({
                           {activeReport.primary_condition}
                         </span>
                         <span className="text-xs font-bold text-[#0756B8]">
-                          Score: {activeReport.risk_score || 0} / 100
+                          Risk Score: {activeReport.risk_score || 0} / 100
                         </span>
                       </div>
                       {activeReport.clinical_recommendation && (
                         <p className="text-xs text-slate-600 leading-relaxed">
-                          <span className="font-bold text-[#071426]">Recommendation: </span>
+                          <span className="font-bold text-[#071426]">AI Recommendation: </span>
                           {activeReport.clinical_recommendation}
                         </p>
                       )}
@@ -491,6 +547,61 @@ export const HistoryTrends: React.FC<HistoryTrendsProps> = ({
                       )}
                     </div>
                   </div>
+
+                  {/* Doctor's Clinical Assessment & Sign-Off */}
+                  {(() => {
+                    const scr = fullReportData?.screening || activeReport;
+                    const doc = scr?.reviewed_by || fullReportData?.reviewed_by;
+                    const notes = scr?.clinical_notes || fullReportData?.clinical_notes;
+                    const diag = scr?.diagnosis_confirmed || fullReportData?.diagnosis_confirmed;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                            <ShieldCheck className="w-4 h-4 text-[#0756B8]" />
+                            <span>Doctor's Clinical Assessment & Sign-Off</span>
+                          </h4>
+                          {doc && (
+                            <span className="text-[11px] font-semibold text-slate-500">
+                              Evaluated by <strong className="text-[#071426]">{doc}</strong>
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                              <span className="text-slate-400 block font-medium">Confirmed Diagnosis</span>
+                              <span className="text-sm font-extrabold text-[#071426]">
+                                {diag || (scr?.review_status === 'reviewed' ? scr?.primary_condition : 'Pending Doctor Evaluation')}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block font-medium">Report Status</span>
+                              <span className={`inline-block font-bold px-2 py-0.5 rounded text-[10px] uppercase mt-0.5 ${
+                                scr?.review_status === 'reviewed' 
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                              }`}>
+                                {scr?.status || (scr?.review_status === 'reviewed' ? 'Report Available' : 'Awaiting Review')}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-xs font-medium mb-1">Doctor's Clinical Notes</span>
+                            <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700 leading-relaxed border border-slate-100 font-sans">
+                              {notes || (scr?.review_status === 'reviewed' ? 'No additional clinical remarks recorded.' : 'Doctor evaluation and clinical assessment notes are currently pending.')}
+                            </div>
+                          </div>
+                          {scr?.clinical_recommendation && (
+                            <div className="text-xs text-slate-600">
+                              <span className="font-bold text-[#071426]">Doctor's Recommendations & Follow-Up: </span>
+                              {scr.clinical_recommendation}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Disclaimer */}
                   <p className="text-[11px] text-slate-400 italic leading-relaxed border-t border-slate-100 pt-3">

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from app.core.config import settings, UPLOADS_DIR, SAMPLE_IMAGES_DIR
-from app.routers import auth, profile, notifications, screening, doctors, appointments, chat, reports, trends, admin, abdm
+from app.routers import auth, profile, notifications, screening, doctors, appointments, chat, reports, trends, admin, abdm, doctor_portal
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -62,6 +62,7 @@ app.include_router(reports.router, prefix=settings.API_V1_STR)
 app.include_router(trends.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(abdm.router, prefix=settings.API_V1_STR)
+app.include_router(doctor_portal.router, prefix=settings.API_V1_STR)
 
 # Production Unified Single-Page Application (SPA) Serving
 # If frontend build output (dist/) is present, serve it directly to eliminate CORS in production

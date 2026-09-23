@@ -197,7 +197,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ setActiveTab }) => {
           <div>
             <div className="flex items-center space-x-2">
               <h2 className="text-xl sm:text-2xl font-bold text-[#071426]">
-                {formData.full_name || 'Netra AI User'}
+                {formData.full_name || 'Complete Your Profile'}
               </h2>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-[#0756B8] border border-blue-200 capitalize">
                 {profile?.role || user?.role || 'Patient'}
@@ -302,7 +302,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ setActiveTab }) => {
                   />
                 ) : (
                   <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium min-h-[36px] flex items-center">
-                    <span className="text-[#071426] font-semibold">{formData.full_name || 'Netra AI User'}</span>
+                    <span className="text-[#071426] font-semibold">{formData.full_name || 'Complete Your Profile'}</span>
                   </div>
                 )}
               </div>
@@ -546,8 +546,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ setActiveTab }) => {
             )}
           </form>
 
-          {/* ABDM & National Health ID Card */}
-          <AyushmanCardSection userFullName={formData.full_name || profile?.full_name || user?.name} />
+          {/* ABDM & National Health ID Card (Patient & Admin only) */}
+          {user?.role !== 'doctor' && (
+            <AyushmanCardSection userFullName={formData.full_name || profile?.full_name || user?.name} />
+          )}
         </div>
 
 

@@ -15,6 +15,7 @@ import {
   Info
 } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { AbdmCard } from '../types';
 
 interface AyushmanCardSectionProps {
@@ -22,6 +23,11 @@ interface AyushmanCardSectionProps {
 }
 
 export const AyushmanCardSection: React.FC<AyushmanCardSectionProps> = ({ userFullName }) => {
+  const { user } = useAuth();
+  if (user?.role === 'doctor') {
+    return null;
+  }
+
   const [card, setCard] = useState<AbdmCard | null>(null);
   const [officialGatewayAvailable, setOfficialGatewayAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -439,18 +445,8 @@ export const AyushmanCardSection: React.FC<AyushmanCardSectionProps> = ({ userFu
 
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-              {/* DEMO MODE NOTICE BANNER */}
-              {!officialGatewayAvailable ? (
-                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
-                  <div className="flex items-center space-x-1.5 font-bold text-amber-950">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    <span>Demo Mode Active (Official NHA Gateway Not Configured)</span>
-                  </div>
-                  <p className="text-[11px] text-amber-800 leading-relaxed">
-                    Official ABDM Sandbox credentials are not configured on this server. This simulation allows you to test the interface safely with format validation and secure masking. <strong>Do not submit real government credentials.</strong>
-                  </p>
-                </div>
-              ) : (
+              {/* OFFICIAL GATEWAY NOTICE (IF CONFIGURED) */}
+              {officialGatewayAvailable && (
                 <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                   <span className="font-semibold text-[11px]">Official ABDM Gateway Available</span>

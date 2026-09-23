@@ -23,38 +23,105 @@ import { HistoryTrends } from './pages/HistoryTrends';
 import { DoctorPortal } from './pages/DoctorPortal';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { ProfilePage } from './pages/ProfilePage';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { AppointmentsPage } from './pages/AppointmentsPage';
 
 const MainApp: React.FC = () => {
   const { user, isLoadingSession } = useAuth();
   const [activeTab, setActiveTab] = useState<string>(() => {
     const token = localStorage.getItem('netra_token');
-    return token ? 'home' : 'login';
+    if (!token) return 'login';
+    const hash = window.location.hash.replace('#', '').trim();
+    if (hash && hash !== 'login') return hash;
+    const saved = localStorage.getItem('netra_active_tab');
+    return saved && saved !== 'login' ? saved : 'home';
   });
   const [doctorConditionFilter, setDoctorConditionFilter] = useState<string>('All');
+  const [screeningPatient, setScreeningPatient] = useState<{
+    id: string;
+    name: string;
+    age?: number;
+    gender?: string;
+    city?: string;
+  } | null>(null);
   const { latestResult, setLatestResult } = useScreening();
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+
+  // Sync activeTab to localStorage and URL hash
+  useEffect(() => {
+    if (activeTab && activeTab !== 'login') {
+      localStorage.setItem('netra_active_tab', activeTab);
+      if (window.location.hash !== `#${activeTab}`) {
+        window.location.hash = activeTab;
+      }
+    }
+  }, [activeTab]);
+
+  // Listen to manual URL hash changes and enforce RBAC
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      if (!hash || hash === 'login') return;
+      if (!user) {
+        setActiveTab('login');
+        return;
+      }
+      if (user.role !== 'admin' && hash.startsWith('admin')) {
+        const target = user.role === 'doctor' ? 'doctor-portal' : 'home';
+        setActiveTab(target);
+        window.location.hash = `#${target}`;
+        return;
+      }
+      if (user.role === 'patient' && hash.startsWith('doctor')) {
+        setActiveTab('home');
+        window.location.hash = '#home';
+        return;
+      }
+      if (user.role === 'doctor' && (hash === 'appointments' || (hash === 'dashboard' && !hash.startsWith('doctor')))) {
+        setActiveTab('doctor-portal');
+        window.location.hash = '#doctor-portal';
+        return;
+      }
+      setActiveTab(hash);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [user]);
 
   useEffect(() => {
     if (!isLoadingSession) {
       if (user && activeTab === 'login') {
-        if (user.role === 'doctor') setActiveTab('doctor-portal');
-        else if (user.role === 'admin') setActiveTab('admin');
+        if (user.role === 'admin') setActiveTab('admin-dashboard');
+        else if (user.role === 'doctor') setActiveTab('doctor-portal');
         else setActiveTab('home');
       } else if (!user) {
         setActiveTab('login');
-      } else if (user?.role === 'patient' && activeTab === 'screening') {
-        setActiveTab('dashboard');
+      } else if (user?.role !== 'admin' && activeTab.startsWith('admin')) {
+        // Enforce RBAC: Non-admin users cannot access admin portal
+        const target = user.role === 'doctor' ? 'doctor-portal' : 'home';
+        setActiveTab(target);
+        window.location.hash = `#${target}`;
+      } else if (user?.role === 'patient' && activeTab.startsWith('doctor')) {
+        // Prevent patient accessing doctor routes directly
+        setActiveTab('home');
+        window.location.hash = '#home';
+      } else if (user?.role === 'doctor' && (activeTab === 'appointments' || (activeTab === 'dashboard' && !activeTab.startsWith('doctor')))) {
+        setActiveTab('doctor-portal');
+        window.location.hash = '#doctor-portal';
       }
     }
   }, [user, isLoadingSession, activeTab]);
 
   const handleLoginSuccess = (loggedInUser: any) => {
-    if (loggedInUser.role === 'doctor') {
+    if (loggedInUser.role === 'admin') {
+      setActiveTab('admin-dashboard');
+      localStorage.setItem('netra_active_tab', 'admin-dashboard');
+    } else if (loggedInUser.role === 'doctor') {
       setActiveTab('doctor-portal');
-    } else if (loggedInUser.role === 'admin') {
-      setActiveTab('admin');
+      localStorage.setItem('netra_active_tab', 'doctor-portal');
     } else {
       setActiveTab('home');
+      localStorage.setItem('netra_active_tab', 'home');
     }
   };
 
@@ -102,18 +169,51 @@ const MainApp: React.FC = () => {
       case 'home':
       case 'landing':
         return {
-          title: 'Netra AI Clinical Home Overview',
-          subtitle: 'Comprehensive deep learning diagnostic workflows, clinical features, and ocular technology'
+          title: user?.role === 'doctor'
+            ? 'Doctor Dashboard - Tele-Screening Review'
+            : user?.role === 'admin'
+            ? 'Admin Dashboard - System Overview'
+            : 'Patient Portal Home',
+          subtitle: user?.role === 'doctor'
+            ? 'Assigned patient metrics, screening reports awaiting evaluation, and urgent clinical flags'
+            : user?.role === 'admin'
+            ? 'Real-time telemetry, screening throughput, verified specialists, and high-risk case triage'
+            : 'National tele-ophthalmology initiative, clinical AI features, and eye care guidance'
+        };
+      case 'dashboard':
+        return {
+          title: user?.role === 'doctor'
+            ? 'Doctor Dashboard - Tele-Screening Review'
+            : user?.role === 'admin'
+            ? 'Admin Dashboard - System Overview'
+            : 'Patient Health Dashboard',
+          subtitle: user?.role === 'doctor'
+            ? 'Assigned patient metrics, screening reports awaiting evaluation, and urgent clinical flags'
+            : user?.role === 'admin'
+            ? 'Real-time telemetry, screening throughput, verified specialists, and high-risk case triage'
+            : 'Ocular health monitoring, risk status, and quick clinical actions'
         };
       case 'screening':
         return {
-          title: 'Eye Screening Studio',
-          subtitle: 'Upload fundus images for instant AI quality check and deep learning analysis'
+          title: user?.role === 'patient' ? 'Retinal Screening Studio' : 'Eye Screening Studio',
+          subtitle: user?.role === 'patient'
+            ? 'Upload retinal fundus images for quality verification and tele-ophthalmology doctor review'
+            : 'Upload fundus images for instant AI quality check and deep learning analysis'
         };
       case 'result':
         return {
           title: 'Diagnostic Analysis Result',
           subtitle: 'Multi-disease classification, Grad-CAM heatmap visualization, and clinical triage'
+        };
+      case 'notifications':
+        return {
+          title: 'Notifications & Alerts',
+          subtitle: 'Clinical updates, evaluation notices, and report delivery alerts'
+        };
+      case 'settings':
+        return {
+          title: 'Account Settings & Preferences',
+          subtitle: 'Manage credentials, security preferences, and personal health configuration'
         };
       case 'chat':
         return {
@@ -123,33 +223,97 @@ const MainApp: React.FC = () => {
       case 'doctors':
         return {
           title: 'Find Eye Specialists',
-          subtitle: 'Locate verified ophthalmologists and book verified clinic consultations'
-        };
-      case 'reports':
-      case 'trends':
-        return {
-          title: 'My Medical Reports',
-          subtitle: 'Track longitudinal screening records, visual trajectories, and clinical notes'
+          subtitle: 'Locate verified ophthalmologists and book clinic consultations'
         };
       case 'appointments':
         return {
           title: 'My Consultation Appointments',
-          subtitle: 'Upcoming ophthalmic consultations and clinical case histories'
+          subtitle: 'Review your booked ophthalmology visits, hospital clinics, and slot receipts'
+        };
+      case 'reports':
+      case 'trends':
+        return {
+          title: 'History & Screening Reports',
+          subtitle: 'Track longitudinal screening records, visual trajectories, and clinical notes'
         };
       case 'doctor-portal':
+      case 'doctor-dashboard':
         return {
-          title: "Doctor Dashboard - Today's Appointments",
-          subtitle: 'Specialist case queue, Grad-CAM diagnostic verification, and clinical sign-off'
+          title: "Doctor Dashboard - Tele-Screening Review",
+          subtitle: 'Assigned patient metrics, screening reports awaiting evaluation, and urgent clinical flags'
+        };
+      case 'doctor-patients':
+        return {
+          title: 'Assigned Patients Directory',
+          subtitle: 'Search patient records, view ocular medical history, and access past retinal screenings'
+        };
+      case 'doctor-reports':
+        return {
+          title: 'AI Screening Reports Review',
+          subtitle: 'Fundus image gradability, Explainable AI Grad-CAM attention heatmaps, and doctor sign-off'
+        };
+      case 'doctor-notifications':
+        return {
+          title: 'Clinical Notifications',
+          subtitle: 'Newly assigned scans, urgent high-risk alerts, and image recapture requests'
+        };
+      case 'doctor-profile':
+        return {
+          title: 'Doctor Profile & Credentials',
+          subtitle: 'Medical registration number, qualifications, hospital affiliation, and contact details'
+        };
+      case 'doctor-settings':
+        return {
+          title: 'Doctor Portal Settings',
+          subtitle: 'Tele-ophthalmology outreach center configuration and clinical alert thresholds'
         };
       case 'admin':
+      case 'admin-dashboard':
         return {
           title: 'Admin Dashboard - System Overview',
           subtitle: 'Real-time telemetry, screening throughput, verified specialists, and high-risk case triage'
         };
+      case 'admin-patients':
+        return {
+          title: 'Patient Governance & Directory',
+          subtitle: 'Search registered patients, manage account access status, and view screening activity'
+        };
+      case 'admin-doctors':
+        return {
+          title: 'Doctor Directory & Verification',
+          subtitle: 'Verify medical registrations, approve or reject credentials, and manage doctor privileges'
+        };
+      case 'admin-reports':
+        return {
+          title: 'Screening Reports Technical Oversight',
+          subtitle: 'Audit scan quality metrics, track ungradable fundus photographs, and inspect technical diagnostics'
+        };
+      case 'admin-monitoring':
+        return {
+          title: 'System Health & Engine Diagnostics',
+          subtitle: 'Live application status, PyTorch model pipeline readiness, database integrity, and error logs'
+        };
+      case 'admin-notifications':
+        return {
+          title: 'Administrative Alerts & Broadcasts',
+          subtitle: 'Doctor verification queues, image capture alerts, and system operational notices'
+        };
+      case 'admin-profile':
+        return {
+          title: 'Administrator Profile',
+          subtitle: 'Manage administrative contact details and platform credentials'
+        };
+      case 'admin-settings':
+        return {
+          title: 'Platform Settings & Security',
+          subtitle: 'Administrator credential management, password updates, and system configuration'
+        };
       case 'profile':
         return {
-          title: 'Patient Profile & ABHA Identity',
-          subtitle: 'Ayushman Bharat Digital Mission (ABDM) record linkage and personal ocular history'
+          title: user?.role === 'doctor' ? 'Doctor Profile & Credentials' : 'Patient Profile & ABHA Identity',
+          subtitle: user?.role === 'doctor' 
+            ? 'Medical registration number, qualifications, and hospital affiliation' 
+            : 'Ayushman Bharat Digital Mission (ABDM) record linkage and personal ocular history'
         };
       default:
         return {
@@ -174,6 +338,7 @@ const MainApp: React.FC = () => {
         }}
         onLogout={() => {
           setIsSidebarOpen(false);
+          localStorage.removeItem('netra_active_tab');
           setActiveTab('login');
         }}
       />
@@ -192,23 +357,26 @@ const MainApp: React.FC = () => {
 
         {/* Scrollable Page Container */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
-          {(activeTab === 'home' || activeTab === 'landing') && (
+          {(activeTab === 'landing' || (activeTab === 'home' && user?.role === 'patient')) && (
             <LandingPage setActiveTab={setActiveTab} />
           )}
 
-          {activeTab === 'dashboard' && (
+          {activeTab === 'dashboard' && user?.role === 'patient' && (
             <PatientDashboard setActiveTab={setActiveTab} />
           )}
 
           {activeTab === 'screening' && (
-            user?.role === 'patient' ? (
-              <PatientDashboard setActiveTab={setActiveTab} />
-            ) : (
-              <ScreeningStudio 
-                onAnalysisComplete={handleAnalysisComplete} 
-                onBack={() => setActiveTab(user?.role === 'doctor' ? 'doctor-portal' : 'dashboard')}
-              />
-            )
+            <ScreeningStudio 
+              onAnalysisComplete={handleAnalysisComplete} 
+              onBack={() => {
+                if (user?.role === 'doctor') {
+                  setActiveTab('doctor-patients');
+                } else {
+                  setActiveTab('home');
+                }
+              }}
+              patientContext={screeningPatient}
+            />
           )}
 
           {activeTab === 'result' && (
@@ -227,14 +395,12 @@ const MainApp: React.FC = () => {
                 <p className="text-xs text-slate-500">
                   Please upload a fundus photograph or perform a screening to generate AI diagnostic predictions and Grad-CAM saliency heatmaps.
                 </p>
-                {user?.role !== 'patient' && (
-                  <button
-                    onClick={() => setActiveTab('screening')}
-                    className="px-6 py-2.5 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white font-semibold text-xs shadow-md transition-all"
-                  >
-                    Start New Screening
-                  </button>
-                )}
+                <button
+                  onClick={() => setActiveTab('screening')}
+                  className="px-6 py-2.5 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white font-semibold text-xs shadow-md transition-all"
+                >
+                  Start New Screening
+                </button>
               </div>
             )
           )}
@@ -250,27 +416,96 @@ const MainApp: React.FC = () => {
             />
           )}
 
+          {activeTab === 'appointments' && (
+            user?.role === 'doctor' ? (
+              <DoctorPortal setActiveTab={setActiveTab} initialSection="dashboard" />
+            ) : (
+              <AppointmentsPage setActiveTab={setActiveTab} />
+            )
+          )}
+
           {(activeTab === 'reports' || activeTab === 'trends') && (
             <HistoryTrends 
-              onBack={() => setActiveTab('dashboard')} 
-              onStartScreening={user?.role !== 'patient' ? () => setActiveTab('screening') : undefined}
+              onBack={() => setActiveTab('home')} 
+              onStartScreening={() => setActiveTab('screening')}
             />
           )}
 
-          {activeTab === 'appointments' && (
-            <PatientDashboard setActiveTab={setActiveTab} />
+          {activeTab === 'notifications' && (
+            user?.role === 'doctor' ? (
+              <DoctorPortal setActiveTab={setActiveTab} initialSection="notifications" />
+            ) : user?.role === 'admin' ? (
+              <AdminDashboard setActiveTab={setActiveTab} initialSection="notifications" />
+            ) : (
+              <NotificationsPage setActiveTab={setActiveTab} onBack={() => setActiveTab('home')} />
+            )
           )}
 
-          {activeTab === 'doctor-portal' && (
-            <DoctorPortal setActiveTab={setActiveTab} />
+          {activeTab === 'settings' && (
+            user?.role === 'doctor' ? (
+              <DoctorPortal setActiveTab={setActiveTab} initialSection="settings" />
+            ) : user?.role === 'admin' ? (
+              <AdminDashboard setActiveTab={setActiveTab} initialSection="settings" />
+            ) : (
+              <ProfilePage setActiveTab={setActiveTab} />
+            )
           )}
 
-          {activeTab === 'admin' && (
-            <AdminDashboard setActiveTab={setActiveTab} />
+          {(activeTab === 'doctor-portal' ||
+            activeTab === 'doctor-dashboard' ||
+            activeTab === 'doctor-patients' ||
+            activeTab === 'doctor-reports' ||
+            activeTab === 'doctor-notifications' ||
+            activeTab === 'doctor-profile' ||
+            activeTab === 'doctor-settings' ||
+            (user?.role === 'doctor' && activeTab === 'dashboard')) && (
+            <DoctorPortal 
+              setActiveTab={setActiveTab} 
+              onStartScreening={(pat) => {
+                setScreeningPatient(pat);
+                setActiveTab('screening');
+              }}
+              initialSection={
+                activeTab === 'doctor-patients' ? 'patients' :
+                activeTab === 'doctor-reports' ? 'reports' :
+                activeTab === 'doctor-notifications' ? 'notifications' :
+                activeTab === 'doctor-profile' ? 'profile' :
+                activeTab === 'doctor-settings' ? 'settings' :
+                'dashboard'
+              } 
+            />
+          )}
+
+          {(activeTab === 'admin' ||
+            activeTab === 'admin-dashboard' ||
+            activeTab === 'admin-patients' ||
+            activeTab === 'admin-doctors' ||
+            activeTab === 'admin-reports' ||
+            activeTab === 'admin-monitoring' ||
+            activeTab === 'admin-notifications' ||
+            activeTab === 'admin-profile' ||
+            activeTab === 'admin-settings') && user?.role === 'admin' && (
+            <AdminDashboard 
+              setActiveTab={setActiveTab} 
+              initialSection={
+                activeTab === 'admin-patients' ? 'patients' :
+                activeTab === 'admin-doctors' ? 'doctors' :
+                activeTab === 'admin-reports' ? 'reports' :
+                activeTab === 'admin-monitoring' ? 'monitoring' :
+                activeTab === 'admin-notifications' ? 'notifications' :
+                activeTab === 'admin-profile' ? 'profile' :
+                activeTab === 'admin-settings' ? 'settings' :
+                'dashboard'
+              } 
+            />
           )}
 
           {activeTab === 'profile' && (
-            <ProfilePage setActiveTab={setActiveTab} />
+            user?.role === 'doctor' ? (
+              <DoctorPortal setActiveTab={setActiveTab} initialSection="profile" />
+            ) : (
+              <ProfilePage setActiveTab={setActiveTab} />
+            )
           )}
         </main>
 

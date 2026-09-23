@@ -144,13 +144,26 @@ test("Second delete returns 404", r_del_again.status_code == 404, str(r_del_agai
 # 15. Also test ABHA address format (e.g. user@abdm)
 print("\n[11] Link via ABHA Address Format (@abdm)")
 r_link_addr = client.post("/api/abdm/card/link", json={
-    "abha_id": "sunita.roy@abdm",
+    "abha_id": "patient@abdm",
     "pmjay_id": "P98765432",
     "consent_given": True,
     "demo_mode": True
 }, headers=patient_headers)
 test("ABHA address link -> 200", r_link_addr.status_code == 200, str(r_link_addr.status_code))
 test("ABHA address masked appropriately", "••••" in r_link_addr.json().get("abha_id_masked"))
+
+# 16. Doctor cannot link Ayushman card (role check)
+print("\n[12] Doctor Role Protection (Cannot Link Card)")
+r_doctor_link = client.post("/api/abdm/card/link", json={
+    "abha_id": "patient@abdm",
+    "pmjay_id": "P98765432",
+    "consent_given": True,
+    "demo_mode": True
+}, headers=doc_headers)
+test("Doctor link attempt rejected with 403", r_doctor_link.status_code == 403, str(r_doctor_link.status_code))
+
+# Clean up linked card from test patient
+client.delete("/api/abdm/card", headers=patient_headers)
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 print("\n" + "="*64)

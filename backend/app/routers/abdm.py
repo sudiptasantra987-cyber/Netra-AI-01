@@ -15,7 +15,7 @@ router = APIRouter(prefix="/abdm", tags=["ABDM & Ayushman Bharat"])
 
 # Regex for ABHA formats:
 # 1. 14-digit numeric ABHA number with or without hyphens (e.g. 91-8273-1928-3482 or 91827319283482)
-# 2. ABHA address (PHR address) (e.g. user@abdm, sunita.roy@abdm)
+# 2. ABHA address (PHR address) (e.g. user@abdm, patient@abdm)
 ABHA_NUMERIC_REGEX = re.compile(r"^(?:\d{2}-\d{4}-\d{4}-\d{4}|\d{14})$")
 ABHA_ADDRESS_REGEX = re.compile(r"^[a-zA-Z0-9._]{3,32}@[a-zA-Z0-9]{2,10}$")
 
@@ -65,6 +65,12 @@ def link_abdm_card(req: AbdmCardLinkRequest, current_user: dict = Depends(get_cu
     - Full IDs are never logged in plain text.
     - If official ABDM API is not configured, runs in clearly-designated Demo Mode.
     """
+    if current_user.get("role") == "doctor":
+        raise HTTPException(
+            status_code=403,
+            detail="Ayushman Card registration is only available for patient accounts."
+        )
+
     user_id = current_user["id"]
 
     # 1. Verify consent

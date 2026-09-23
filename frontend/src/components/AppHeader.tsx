@@ -113,9 +113,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     setActiveTab('profile');
   };
 
-  const displayName = user?.name || 'User';
-  const firstName = displayName.split(' ')[0] || 'User';
-  const userInitial = displayName.trim().charAt(0).toUpperCase() || 'U';
+  const hasActualName = Boolean(user?.name && user.name.trim());
+  const displayName = hasActualName ? user!.name : 'Complete Your Profile';
+  const firstName = hasActualName ? user!.name.trim().split(' ')[0] : '';
+  const userInitial = hasActualName ? user!.name.trim().charAt(0).toUpperCase() : 'U';
 
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-slate-200/90 bg-white px-3 py-3 shadow-xs sm:px-8 sm:py-4">
@@ -149,7 +150,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
         <div className="min-w-0">
           <h1 className="truncate text-base font-bold tracking-tight text-[#071426] sm:text-2xl">
-            {title || `Good Morning, ${firstName}`}
+            {title || (hasActualName ? `Good Morning, ${firstName}` : 'Welcome to Netra AI')}
           </h1>
           <p className="hidden text-xs font-medium text-slate-500 sm:block sm:text-sm">
             {subtitle || 'Take care of your eyes. They help you see the world.'}
@@ -276,6 +277,25 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                             className="mt-2 inline-flex items-center space-x-1 px-3 py-1 rounded-lg bg-[#0756B8] hover:bg-[#054494] text-white font-semibold text-[11px] shadow-2xs transition-colors"
                           >
                             <span>Complete Profile</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        )}
+
+                        {(notification.action_url === '/reports' || 
+                          notification.type === 'report_reviewed' || 
+                          notification.type === 'report_finalized' || 
+                          notification.title.toLowerCase().includes('report') || 
+                          notification.message.toLowerCase().includes('report')) && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await markNotificationAsRead(notification.id);
+                              setIsNotificationPanelOpen(false);
+                              setActiveTab('reports');
+                            }}
+                            className="mt-2 inline-flex items-center space-x-1 px-3 py-1 rounded-lg bg-[#0756B8] hover:bg-[#054494] text-white font-semibold text-[11px] shadow-2xs transition-colors"
+                          >
+                            <span>View Report</span>
                             <ArrowRight className="w-3 h-3" />
                           </button>
                         )}

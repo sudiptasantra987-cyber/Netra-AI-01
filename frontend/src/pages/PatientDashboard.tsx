@@ -81,11 +81,13 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
       <div className="card-clean p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-[#0756B8] border-2 border-[#19C7E8] text-white font-bold flex items-center justify-center text-sm shadow-sm">
-            {(user?.name || 'User').charAt(0)}
+            {(user?.name && user.name.trim() ? user.name.trim().charAt(0) : 'U').toUpperCase()}
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-[#071426] text-sm">{user?.name || 'User'}</span>
+              <span className="font-bold text-[#071426] text-sm">
+                {user?.name && user.name.trim() ? user.name : 'Complete Your Profile'}
+              </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#edf5ff] text-[#0756B8] border border-[#bcdbff] uppercase">
                 {user?.role || 'Patient'}
               </span>
@@ -134,24 +136,33 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
                 ? 'Early signs or mild vascular variation observed. Regular tracking and specialist checkup recommended.'
                 : 'Retinal physiology within healthy parameters. Maintain regular annual checkups.'
             ) : (
-              'No retinal scan records on file yet. Consult your eye care specialist or ophthalmologist to conduct a comprehensive ocular evaluation and view your reports here.'
+              'No retinal scan records on file yet. Visit your verified eye care doctor or participating rural screening centre to conduct your retinal examination and access your official report here.'
             )}
           </p>
 
-          <button
-            onClick={() => setActiveTab('reports')}
-            className="text-xs font-bold text-[#0756B8] hover:text-[#054494] flex items-center space-x-1 pt-1 group"
-          >
-            <span>{hasLatestResult ? 'View Detailed Report' : 'View Report History'}</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              onClick={() => setActiveTab('reports')}
+              className="px-4 py-2 rounded-xl bg-[#0756B8] hover:bg-[#054494] text-white text-xs font-bold transition-all shadow-sm flex items-center space-x-1.5 focus:outline-none focus:ring-2 focus:ring-[#19C7E8]"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#19C7E8]" />
+              <span>My Screening Reports</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('doctors')}
+              className="px-4 py-2 rounded-xl bg-[#edf5ff] hover:bg-[#bcdbff]/50 text-[#0756B8] text-xs font-bold transition-all border border-[#bcdbff] flex items-center space-x-1.5"
+            >
+              <Stethoscope className="w-3.5 h-3.5 text-[#0756B8]" />
+              <span>Find Screening Centre</span>
+            </button>
+          </div>
         </div>
 
         {/* Right: Circular Eye Preview Thumbnail matching Screen 3 */}
         <div 
           onClick={() => setActiveTab('reports')}
           className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-md bg-[#071426] shrink-0 cursor-pointer group flex items-center justify-center text-center"
-          title={hasLatestResult ? 'Click to view full diagnosis' : 'Click to view report records'}
+          title={hasLatestResult ? 'Click to view full diagnosis' : 'Screenings are conducted by clinical doctors'}
         >
           {previewImage ? (
             <>
@@ -167,16 +178,39 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
             </>
           ) : (
             <div className="p-2 text-slate-400 flex flex-col items-center space-y-1">
-              <FileText className="w-7 h-7 text-[#19C7E8] group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold text-slate-300">Reports</span>
+              <Eye className="w-7 h-7 text-[#19C7E8] group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold text-slate-300">Clinical Scans</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* 4 Quick Action Cards matching Screen 3 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: My Appointments */}
+      {/* 5 Quick Action Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        {/* Card 1: My Screening Reports */}
+        <button
+          onClick={() => setActiveTab('reports')}
+          className="card-clean-hover p-5 text-left flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-[#19C7E8] bg-gradient-to-br from-white to-[#edf5ff]/40 border-[#bcdbff]/80"
+        >
+          <div className="w-10 h-10 rounded-xl bg-[#0756B8] text-white flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-xs">
+            <FileText className="w-5 h-5 text-[#19C7E8]" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-1.5">
+              <h3 className="text-sm font-bold text-[#071426] group-hover:text-[#0756B8] transition-colors">
+                My Screening Reports
+              </h3>
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#19C7E8]/15 text-[#0756B8]">
+                Verified
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              View specialist reviewed scans & AI findings
+            </p>
+          </div>
+        </button>
+
+        {/* Card 2: My Appointments */}
         <button
           onClick={() => setActiveTab('appointments')}
           className="card-clean-hover p-5 text-left flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-[#19C7E8]"
@@ -194,7 +228,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
           </div>
         </button>
 
-        {/* Card 2: AI Eye Assistant */}
+        {/* Card 3: AI Eye Assistant */}
         <button
           onClick={() => setActiveTab('chat')}
           className="card-clean-hover p-5 text-left flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-[#19C7E8]"
@@ -212,7 +246,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
           </div>
         </button>
 
-        {/* Card 3: Find Ophthalmologist */}
+        {/* Card 4: Find Screening Centre */}
         <button
           onClick={() => setActiveTab('doctors')}
           className="card-clean-hover p-5 text-left flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-[#19C7E8]"
@@ -222,28 +256,28 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ setActiveTab
           </div>
           <div>
             <h3 className="text-sm font-bold text-[#071426] group-hover:text-[#0756B8] transition-colors">
-              Find Ophthalmologist
+              Find Screening Centre
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              View nearby specialists
+              View nearby doctors & clinics
             </p>
           </div>
         </button>
 
-        {/* Card 4: My Reports */}
+        {/* Card 5: Profile & Health ID */}
         <button
-          onClick={() => setActiveTab('reports')}
+          onClick={() => setActiveTab('profile')}
           className="card-clean-hover p-5 text-left flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-[#19C7E8]"
         >
           <div className="w-10 h-10 rounded-xl bg-[#F1F6FC] text-[#0756B8] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-[#cbdcf0]">
-            <FileText className="w-5 h-5" />
+            <User className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-[#071426] group-hover:text-[#0756B8] transition-colors">
-              My Reports
+              Health ID Profile
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              View your past reports
+              Manage ABHA & patient details
             </p>
           </div>
         </button>

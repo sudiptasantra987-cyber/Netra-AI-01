@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Optional
+from datetime import datetime
 import uuid
 import re
 from app.core.database import db
@@ -83,6 +84,12 @@ def register_user(req: UserRegister):
                     detail="Please enter a valid email address or phone number."
                 )
 
+    if req.role == "admin":
+        raise HTTPException(
+            status_code=403, 
+            detail="Public registration for Administrator accounts is not permitted. Please contact Netra AI System Administration."
+        )
+
     if len(req.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters long.")
         
@@ -103,11 +110,15 @@ def register_user(req: UserRegister):
         "password_hash": hash_password(req.password),
         "name": req.name.strip(),
         "role": req.role,
+        "status": "active",
+        "verification_status": "pending" if req.role == "doctor" else "verified",
+        "created_at": datetime.now().isoformat(),
         "age": req.age,
         "gender": req.gender,
         "phone": clean_phone,
         "city": req.city,
-        "specialization": req.specialization
+        "specialization": req.specialization,
+        "medical_reg_no": req.license_number or ""
     }
     db.data.setdefault("users", []).append(new_user)
     db.save()
@@ -121,6 +132,16 @@ def register_user(req: UserRegister):
         type="profile_completion",
         action_url="/profile"
     )
+
+    # Notify administrator when a new doctor registers
+    if req.role == "doctor":
+        db.add_notification(
+            user_id="admin-01",
+            title="New Doctor Verification Request",
+            message=f"Dr. {req.name.strip()} ({clean_email or clean_phone}) has registered and submitted credentials for verification.",
+            type="doctor_verification",
+            action_url="admin-doctors"
+        )
     
     token = create_access_token({"sub": user_id, "role": req.role, "name": req.name})
     return TokenResponse(
@@ -134,7 +155,9 @@ def register_user(req: UserRegister):
             gender=new_user.get("gender"),
             phone=new_user.get("phone"),
             city=new_user.get("city"),
-            specialization=new_user.get("specialization")
+            specialization=new_user.get("specialization"),
+            verification_status=new_user.get("verification_status"),
+            verification_notes=new_user.get("verification_notes")
         )
     )
 
@@ -181,6 +204,20 @@ def login_user(req: UserLogin):
             detail=f"Incorrect password. Please try again ({remaining} attempt(s) remaining before lockout) or click 'Forgot password?'."
         )
         
+    # Check if account has been deactivated by admin
+    if user.get("status") == "inactive":
+        raise HTTPException(
+            status_code=403,
+            detail="Your account has been deactivated by the system administrator. Please contact Netra AI support."
+        )
+
+    # Enforce sole administrator policy
+    if user.get("role") == "admin" and user.get("email") != "santrasudipta70@gmail.com":
+        raise HTTPException(
+            status_code=403,
+            detail="Access forbidden: Admin Portal access is restricted exclusively to santrasudipta70@gmail.com."
+        )
+
     # Successful login: clear any recorded failed attempts
     clear_failed_logins(identifier)
     if user.get("email"):
@@ -200,7 +237,9 @@ def login_user(req: UserLogin):
             gender=user.get("gender"),
             phone=user.get("phone"),
             city=user.get("city"),
-            specialization=user.get("specialization")
+            specialization=user.get("specialization"),
+            verification_status=user.get("verification_status"),
+            verification_notes=user.get("verification_notes")
         )
     )
 
@@ -404,6 +443,8 @@ def register_verify_otp(req: RegisterVerifyOtpRequest):
             email=new_user.get("email"),
             role=new_user["role"],
             phone=new_user.get("phone"),
+            verification_status=new_user.get("verification_status"),
+            verification_notes=new_user.get("verification_notes")
         )
     )
 

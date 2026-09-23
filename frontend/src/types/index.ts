@@ -8,6 +8,11 @@ export interface User {
   phone?: string;
   city?: string;
   specialization?: string;
+  verification_status?: 'verified' | 'pending' | 'rejected' | 'revoked' | string;
+  verification_notes?: string;
+  medical_reg_no?: string;
+  hospital?: string;
+  qualifications?: string;
 }
 
 export interface UserProfile {
@@ -24,6 +29,10 @@ export interface UserProfile {
   state?: string;
   pin_code?: string;
   bio?: string;
+  medical_reg_no?: string;
+  qualifications?: string;
+  specialization?: string;
+  hospital?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -94,6 +103,14 @@ export interface ScreeningResult {
   clinical_recommendation: string;
   gradcam_image_base64?: string;
   affected_quadrants: string[];
+  is_gradable?: boolean;
+  status?: string;
+  patient_notes?: string;
+  review_status?: string;
+  clinical_notes?: string;
+  diagnosis_confirmed?: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
   model_version: string;
 }
 
@@ -189,3 +206,220 @@ export interface ResearchMetrics {
   roc_curves: Record<string, { fpr: number; tpr: number }[]>;
   matlab_script_code: string;
 }
+
+export interface DoctorActivityItem {
+  screening_id: string;
+  patient_id: string;
+  patient_name: string;
+  date: string;
+  timestamp: string;
+  primary_condition: string;
+  risk_level: string;
+  risk_score: number;
+  review_status: string;
+  image_url: string;
+}
+
+export interface DoctorDashboardStats {
+  doctor_id: string;
+  doctor_name: string;
+  total_patients: number;
+  reports_awaiting_review: number;
+  reports_reviewed: number;
+  reports_urgent: number;
+  recent_activity: DoctorActivityItem[];
+}
+
+export interface DoctorPatientSummary {
+  patient_id: string;
+  patient_name: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  age?: number;
+  gender?: string;
+  total_screenings: number;
+  latest_screening_date?: string;
+  latest_condition?: string;
+  latest_risk_level?: string;
+  latest_review_status?: string;
+}
+
+export interface RetinalFinding {
+  name: string;
+  category: string;
+  present: boolean;
+  description: string;
+  severity: 'Normal' | 'Mild' | 'Moderate' | 'Severe';
+}
+
+export interface DoctorScreeningDetail {
+  screening_id: string;
+  patient_id: string;
+  patient_name: string;
+  patient_age?: number;
+  patient_gender?: string;
+  patient_city?: string;
+  patient_phone?: string;
+  timestamp: string;
+  date: string;
+  image_url: string;
+  quality: QualityMetrics;
+  is_gradable: boolean;
+  primary_condition: string;
+  primary_confidence: number;
+  all_predictions: DiseasePrediction[];
+  risk_level: string;
+  risk_score: number;
+  clinical_recommendation: string;
+  gradcam_image_base64?: string;
+  affected_quadrants: string[];
+  retinal_findings: RetinalFinding[];
+  review_status: 'pending' | 'reviewed' | 'needs_further_examination' | 'recapture_required' | 'referred';
+  clinical_notes?: string;
+  diagnosis_confirmed?: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
+  model_version: string;
+}
+
+export interface ScreeningReviewUpdateRequest {
+  review_status: 'reviewed' | 'needs_further_examination' | 'recapture_required' | 'referred';
+  clinical_notes: string;
+  diagnosis_confirmed?: string;
+}
+
+export interface DoctorProfileDetails {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  medical_reg_no?: string;
+  qualifications?: string;
+  specialization?: string;
+  hospital?: string;
+  city?: string;
+  address?: string;
+  profile_picture?: string;
+  bio?: string;
+}
+
+// Admin Portal Types
+export interface AdminActivityItem {
+  id: string;
+  title: string;
+  category: string;
+  timestamp: string;
+  time_ago: string;
+  type: 'info' | 'success' | 'warning' | 'danger';
+}
+
+export interface AdminDashboardStats {
+  total_patients: number;
+  total_doctors: number;
+  total_screenings: number;
+  reports_awaiting_review: number;
+  reports_reviewed: number;
+  reports_requiring_attention: number;
+  verified_doctors_count: number;
+  pending_doctors_count: number;
+  recent_activity: AdminActivityItem[];
+}
+
+export interface AdminPatientItem {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  status: 'active' | 'inactive';
+  created_at: string;
+  screening_count: number;
+  last_screening_date?: string;
+}
+
+export interface AdminDoctorItem {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  medical_reg_no?: string;
+  qualifications?: string;
+  specialization?: string;
+  hospital?: string;
+  city?: string;
+  verification_status: 'verified' | 'pending' | 'rejected';
+  status: 'active' | 'inactive';
+  screening_count: number;
+  created_at: string;
+}
+
+export interface AdminScreeningItem {
+  screening_id: string;
+  patient_id: string;
+  patient_name: string;
+  doctor_id?: string;
+  doctor_name?: string;
+  date: string;
+  timestamp: string;
+  primary_condition: string;
+  risk_level: string;
+  risk_score: number;
+  review_status: string;
+  is_suitable: boolean;
+  composite_quality: number;
+  technical_status: 'normal' | 'ungradable' | 'low_quality' | 'failed_upload';
+  rejection_reasons: string[];
+  image_url: string;
+}
+
+export interface AdminSystemHealth {
+  app_status: 'Healthy' | 'Degraded' | 'Offline';
+  ai_model_status: string;
+  ai_model_name: string;
+  ai_checkpoint_found: boolean;
+  database_status: string;
+  database_records_count: Record<string, number>;
+  backend_uptime_seconds: number;
+  timestamp: string;
+  recent_errors: Array<{
+    id: string;
+    type: string;
+    message: string;
+    details: string;
+    timestamp: string;
+  }>;
+}
+
+export interface AdminAuditLogItem {
+  id: string;
+  admin_id: string;
+  admin_name: string;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  timestamp: string;
+  details: string;
+}
+
+export interface AdminNotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  category: 'doctor_verification' | 'technical_alert' | 'system_announcement';
+  is_read: boolean;
+  created_at: string;
+  action_url?: string;
+}
+
+export interface AdminProfileDetails {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  role: string;
+  created_at: string;
+}
+
+

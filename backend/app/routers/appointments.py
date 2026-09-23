@@ -9,7 +9,7 @@ from app.models.schema import BookAppointmentRequest, AppointmentRecord, DoctorN
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
 
 @router.post("/book", response_model=AppointmentRecord)
-def book_appointment(req: BookAppointmentRequest, patient_id: str = "pat-01", patient_name: str = "Sunita Roy"):
+def book_appointment(req: BookAppointmentRequest, patient_id: str = "pat-01", patient_name: str = ""):
     # Find doctor
     doc = None
     for d in DOCTORS_DATABASE:

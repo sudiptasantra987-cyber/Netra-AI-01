@@ -10,6 +10,10 @@ import {
   User, 
   LogOut, 
   ShieldCheck,
+  Users,
+  Bell,
+  Settings,
+  Activity,
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -70,10 +74,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'screening',
-      label: 'New Screening',
+      label: 'Retinal Screening',
       icon: Eye,
-      roles: ['doctor', 'admin'],
-      badge: 'Doctor'
+      roles: ['doctor', 'admin']
     },
     {
       id: 'chat',
@@ -89,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'reports',
-      label: 'My Reports',
+      label: 'My Screening Reports',
       icon: FileText,
       roles: ['patient', 'doctor', 'admin']
     },
@@ -97,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'appointments',
       label: 'Appointments',
       icon: Calendar,
-      roles: ['patient', 'doctor', 'admin']
+      roles: ['patient', 'admin']
     },
     {
       id: 'doctor-portal',
@@ -115,9 +118,192 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
-  const filteredItems = navItems.filter(item => 
-    !user || item.roles.includes(user.role)
-  );
+  // Specific 5-section navigation for Doctors in strict order:
+  // 1. Home, 2. Patients, 3. Screening Reports, 4. Settings, 5. Logout
+  const doctorNavItems = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: Home,
+      isLogout: false
+    },
+    {
+      id: 'doctor-patients',
+      label: 'Patients',
+      icon: Users,
+      isLogout: false
+    },
+    {
+      id: 'doctor-reports',
+      label: 'Screening Reports',
+      icon: FileText,
+      isLogout: false
+    },
+    {
+      id: 'doctor-settings',
+      label: 'Settings',
+      icon: Settings,
+      isLogout: false
+    },
+    {
+      id: 'doctor-logout',
+      label: 'Logout',
+      icon: LogOut,
+      isLogout: true
+    }
+  ];
+
+  // Specific 9-section navigation for Administrators in strict order:
+  // 1. Dashboard, 2. Patients, 3. Doctors, 4. Screening Reports, 5. System Monitoring, 6. Notifications, 7. My Profile, 8. Settings, 9. Logout
+  const adminNavItems = [
+    {
+      id: 'admin-dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      isLogout: false
+    },
+    {
+      id: 'admin-patients',
+      label: 'Patients',
+      icon: Users,
+      isLogout: false
+    },
+    {
+      id: 'admin-doctors',
+      label: 'Doctors',
+      icon: Stethoscope,
+      isLogout: false
+    },
+    {
+      id: 'admin-reports',
+      label: 'Screening Reports',
+      icon: FileText,
+      isLogout: false
+    },
+    {
+      id: 'admin-monitoring',
+      label: 'System Monitoring',
+      icon: Activity,
+      isLogout: false
+    },
+    {
+      id: 'admin-notifications',
+      label: 'Notifications',
+      icon: Bell,
+      isLogout: false
+    },
+    {
+      id: 'admin-profile',
+      label: 'My Profile',
+      icon: User,
+      isLogout: false
+    },
+    {
+      id: 'admin-settings',
+      label: 'Settings',
+      icon: Settings,
+      isLogout: false
+    },
+    {
+      id: 'admin-logout',
+      label: 'Logout',
+      icon: LogOut,
+      isLogout: true
+    }
+  ];
+
+  // Patient Portal Navigation:
+  // 1. Home, 2. Dashboard, 3. Screening, 4. History & Reports, 5. Find Doctor, 6. Appointments, 7. Profile
+  const patientNavItems = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: Home,
+      isLogout: false
+    },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      isLogout: false
+    },
+    {
+      id: 'screening',
+      label: 'Screening',
+      icon: Eye,
+      isLogout: false
+    },
+    {
+      id: 'reports',
+      label: 'History & Reports',
+      icon: FileText,
+      isLogout: false
+    },
+    {
+      id: 'doctors',
+      label: 'Find Doctor',
+      icon: Stethoscope,
+      isLogout: false
+    },
+    {
+      id: 'appointments',
+      label: 'Appointments',
+      icon: Calendar,
+      isLogout: false
+    },
+    {
+      id: 'profile',
+      label: 'Profile',
+      icon: User,
+      isLogout: false
+    }
+  ];
+
+  const filteredItems = user?.role === 'doctor' 
+    ? doctorNavItems 
+    : user?.role === 'admin'
+    ? adminNavItems
+    : patientNavItems;
+
+  const isItemActive = (itemId: string) => {
+    if (user?.role === 'doctor') {
+      if (itemId === 'home') {
+        return activeTab === 'home' || activeTab === 'landing';
+      }
+      if (itemId === 'doctor-profile') {
+        return activeTab === 'doctor-profile' || activeTab === 'profile';
+      }
+      return activeTab === itemId;
+    }
+    if (user?.role === 'admin') {
+      if (itemId === 'admin-dashboard') {
+        return activeTab === 'admin' || activeTab === 'admin-dashboard';
+      }
+      return activeTab === itemId;
+    }
+    if (itemId === 'home') {
+      return activeTab === 'home' || activeTab === 'landing';
+    }
+    if (itemId === 'dashboard') {
+      return activeTab === 'dashboard';
+    }
+    if (itemId === 'screening') {
+      return activeTab === 'screening';
+    }
+    if (itemId === 'reports') {
+      return activeTab === 'reports' || activeTab === 'trends';
+    }
+    if (itemId === 'doctors') {
+      return activeTab === 'doctors';
+    }
+    if (itemId === 'appointments') {
+      return activeTab === 'appointments';
+    }
+    if (itemId === 'profile') {
+      return activeTab === 'profile' || activeTab === 'settings';
+    }
+    return activeTab === itemId;
+  };
 
   return (
     <>
@@ -193,18 +379,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Scrollable Navigation items */}
           <nav className="p-3 space-y-1 overflow-y-auto flex-1 custom-scrollbar">
-            {filteredItems.map((item) => {
+            {filteredItems.map((item: any) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id || (item.id === 'home' && activeTab === 'landing');
+              const isActive = isItemActive(item.id);
+              const isLogout = item.isLogout;
               return (
                 <button
                   key={item.id}
                   onClick={() => {
+                    if (isLogout) {
+                      handleLogout();
+                      return;
+                    }
                     setActiveTab(item.id);
                     onClose();
                   }}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all relative group ${
-                    isActive
+                    isLogout
+                      ? 'text-rose-400 hover:bg-rose-950/30'
+                      : isActive
                       ? 'bg-[#0756B8]/25 text-white font-bold border-l-4 border-[#19C7E8] shadow-sm'
                       : 'text-slate-300 hover:text-white hover:bg-[#0e223f]'
                   }`}
@@ -212,7 +405,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex items-center space-x-3 min-w-0">
                     <Icon 
                       className={`w-5 h-5 shrink-0 transition-colors ${
-                        isActive ? 'text-[#19C7E8]' : 'text-slate-400 group-hover:text-white'
+                        isLogout
+                          ? 'text-rose-400'
+                          : isActive ? 'text-[#19C7E8]' : 'text-slate-400 group-hover:text-white'
                       }`} 
                     />
                     <span className="truncate">{item.label}</span>

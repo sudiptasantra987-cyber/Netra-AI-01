@@ -192,21 +192,13 @@ if dev_otp_fp:
     test("Login with new password works", r11b.status_code == 200, str(r11b.status_code))
     
     # Restore original password
-    if dev_otp_fp:
-        r_restore_req = client.post("/api/auth/forgot-password/request-otp", json={
-            "destination": "patient@netra.ai",
-            "destination_type": "email",
-        })
-        msg_restore = r_restore_req.json().get("message", "")
-        if "[DEV: OTP=" in msg_restore:
-            otp_restore = msg_restore.split("[DEV: OTP=")[1].split("]")[0]
-            client.post("/api/auth/forgot-password/reset", json={
-                "destination": "patient@netra.ai",
-                "destination_type": "email",
-                "otp": otp_restore,
-                "new_password": "password123",
-            })
-            print("  ℹ️  Restored original password (password123)")
+    from app.core.database import db
+    from app.core.security import hash_password
+    pat_user = db.find_user_by_email("patient@netra.ai")
+    if pat_user:
+        pat_user["password_hash"] = hash_password("password123")
+        db.save()
+        print("  ℹ️  Restored original password (password123)")
 else:
     print("  ⚠️  Skipping — no dev OTP captured")
 
@@ -233,8 +225,8 @@ else:
 
 # ── 13. Existing login still works (backward compat) ─────────────────────────
 print("\n[13] Backward Compatibility — Old login still works")
-r13 = client.post("/api/auth/login", json={"email": "admin@netra.ai", "password": "admin123"})
-test("admin@netra.ai login → 200", r13.status_code == 200, str(r13.status_code))
+r13 = client.post("/api/auth/login", json={"email": "santrasudipta70@gmail.com", "password": "sudipta@70"})
+test("santrasudipta70@gmail.com login → 200", r13.status_code == 200, str(r13.status_code))
 d13 = r13.json()
 test("Returns admin token", bool(d13.get("access_token")))
 test("Role is admin", d13.get("user", {}).get("role") == "admin")

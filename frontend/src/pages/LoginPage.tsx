@@ -153,21 +153,62 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const { setUser } = useAuth();
 
   // ── Login ────────────────────────────────────────────────────────────────
+  const [loginMode, setLoginMode] = useState<'patient' | 'doctor' | 'admin'>('patient');
   const [loginId, setLoginId] = useState('');
   const [loginPw, setLoginPw] = useState('');
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [registrationSuccessMsg, setRegistrationSuccessMsg] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
     const id = loginId.trim();
-    if (!id) { setLoginError('Please enter your email address or phone number.'); return; }
+    if (!id) { 
+      setLoginError(
+        loginMode === 'admin' 
+          ? 'Please enter your administrator email address.' 
+          : loginMode === 'doctor'
+          ? 'Please enter your doctor email address or phone number.'
+          : 'Please enter your email address or phone number.'
+      ); 
+      return; 
+    }
     if (!loginPw) { setLoginError('Please enter your password.'); return; }
     setLoginLoading(true);
     try {
       const res = await api.login(id, loginPw);
+      
+      if (loginMode === 'admin' && res.user.role !== 'admin') {
+        localStorage.removeItem('netra_token');
+        setUser(null);
+        setLoginError('Access restricted: This account does not possess System Administrator privileges. Please use the Patient Login or Doctor Login tab.');
+        return;
+      }
+
+      if (loginMode === 'doctor' && res.user.role !== 'doctor') {
+        localStorage.removeItem('netra_token');
+        setUser(null);
+        if (res.user.role === 'admin') {
+          setLoginError('Access restricted: This account has Administrator privileges. Please use the Admin Portal tab.');
+        } else {
+          setLoginError('Access restricted: This account is registered as a Patient. Please use the Patient Login tab.');
+        }
+        return;
+      }
+
+      if (loginMode === 'patient' && res.user.role !== 'patient') {
+        localStorage.removeItem('netra_token');
+        setUser(null);
+        if (res.user.role === 'admin') {
+          setLoginError('Access restricted: This account has Administrator privileges. Please use the Admin Portal tab.');
+        } else {
+          setLoginError('Access restricted: This account is registered as a Doctor. Please use the Doctor Login tab.');
+        }
+        return;
+      }
+
       setUser(res.user);
       onLoginSuccess(res.user);
     } catch (err: any) {
@@ -189,7 +230,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [regError, setRegError] = useState<string | null>(null);
   const [regSuccess, setRegSuccess] = useState<string | null>(null);
 
-  const openReg = () => {
+  const openReg = (initialRole: 'patient' | 'doctor' = 'patient') => {
     setIsRegOpen(true);
     setRegError(null);
     setRegSuccess(null);
@@ -197,7 +238,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setRegIdentifier('');
     setRegPw('');
     setRegConfirmPw('');
-    setRegRole('patient');
+    setRegRole(initialRole);
   };
 
   const handleRegSubmit = async (e: React.FormEvent) => {
@@ -239,7 +280,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     setRegLoading(true);
     try {
-      const res = await api.register({
+      await api.register({
         name,
         identifier,
         password: regPw,
@@ -247,14 +288,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         role: regRole,
       });
 
-      setUser(res.user);
-      setRegSuccess(`Account created successfully! Redirecting you to the ${res.user.role === 'doctor' ? 'Doctor Portal' : 'Patient Home'}...`);
-
-      // Seamless role-based navigation after showing success message
-      setTimeout(() => {
-        setIsRegOpen(false);
-        onLoginSuccess(res.user);
-      }, 1200);
+      // DO NOT automatically log the patient into the application.
+      // DO NOT directly open the Patient Portal after registration.
+      // After registration is completed, redirect the patient to the Login page.
+      // Show a clear message such as: "Registration successful. Please log in to continue."
+      // The patient must manually enter their email/phone number and password to log in.
+      setIsRegOpen(false);
+      setLoginId(identifier);
+      setLoginPw('');
+      setLoginError(null);
+      setRegistrationSuccessMsg("Registration successful. Please log in to continue.");
+      setLoginMode(regRole === 'doctor' ? 'doctor' : 'patient');
     } catch (err: any) {
       setRegError(err.message || 'Registration failed. Please check your credentials and try again.');
     } finally {
@@ -375,21 +419,95 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
 
         <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgba(7,20,38,0.06)] border border-slate-200/90 p-8">
-          <h2 className="text-2xl font-bold text-[#071426] mb-1.5">Log in to your account</h2>
-          <p className="text-slate-500 text-sm mb-6">Welcome back! Please enter your credentials.</p>
+          {/* Portal Switcher Tabs */}
+          <div className="flex bg-[#F1F6FC] p-1 rounded-2xl mb-6 border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode('patient');
+                setLoginError(null);
+              }}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                loginMode === 'patient' 
+                  ? 'bg-white text-[#0756B8] shadow-xs' 
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Patient Login
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode('doctor');
+                setLoginError(null);
+              }}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                loginMode === 'doctor' 
+                  ? 'bg-white text-[#0756B8] shadow-xs' 
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Doctor Login
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode('admin');
+                setLoginError(null);
+              }}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                loginMode === 'admin' 
+                  ? 'bg-[#071426] text-[#19C7E8] shadow-xs' 
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Admin Portal</span>
+            </button>
+          </div>
+
+          {loginMode === 'admin' ? (
+            <div className="mb-6">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0756B8]/10 text-[#0756B8] border border-[#0756B8]/20 mb-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#0756B8]" />
+                <span>Netra AI System Administration</span>
+              </div>
+              <h2 className="text-2xl font-bold text-[#071426] tracking-tight">Admin Portal Sign In</h2>
+              <p className="text-slate-500 text-xs mt-1">Authorized health IT & system governance personnel only</p>
+            </div>
+          ) : loginMode === 'doctor' ? (
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#071426] mb-1.5">Doctor Sign In</h2>
+              <p className="text-slate-500 text-sm">Welcome back! Please enter your clinical credentials.</p>
+            </div>
+          ) : (
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#071426] mb-1.5">Patient Sign In</h2>
+              <p className="text-slate-500 text-sm">Welcome back! Please enter your credentials.</p>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
+            {registrationSuccessMsg && <Alert type="success" msg={registrationSuccessMsg} />}
             {loginError && <Alert type="error" msg={loginError} />}
 
             <div>
-              <label className="block text-sm font-semibold text-[#071426] mb-1">Email or Phone Number</label>
+              <label className="block text-sm font-semibold text-[#071426] mb-1">
+                {loginMode === 'admin' ? 'Administrator Email' : 'Email or Phone Number'}
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={loginId}
                   onChange={e => setLoginId(e.target.value)}
-                  placeholder="Enter your email address or phone number"
+                  placeholder={
+                    loginMode === 'admin' 
+                      ? 'santrasudipta70@gmail.com' 
+                      : loginMode === 'doctor'
+                      ? 'doctor@netra.ai or registered phone'
+                      : 'Enter your email address or phone number'
+                  }
                   className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19C7E8] focus:border-[#0756B8] text-sm text-[#071426] transition-all bg-white"
                 />
               </div>
@@ -421,18 +539,55 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
 
             <button type="submit" disabled={loginLoading}
-              className="w-full py-3.5 bg-[#0756B8] hover:bg-[#054494] text-white font-bold rounded-xl shadow-md shadow-[#0756B8]/20 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#19C7E8] focus:ring-offset-2 disabled:opacity-60">
-              {loginLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ArrowRight className="w-4 h-4" /> Log In</>}
+              className={`w-full py-3.5 ${
+                loginMode === 'admin' 
+                  ? 'bg-[#071426] hover:bg-[#0c2240] text-white shadow-md shadow-[#071426]/20' 
+                  : 'bg-[#0756B8] hover:bg-[#054494] text-white shadow-md shadow-[#0756B8]/20'
+              } font-bold rounded-xl transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#19C7E8] focus:ring-offset-2 disabled:opacity-60`}>
+              {loginLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <ArrowRight className="w-4 h-4" /> 
+                  {loginMode === 'admin' ? 'Log In to Admin Portal' : loginMode === 'doctor' ? 'Log In as Doctor' : 'Log In'}
+                </>
+              )}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-            <p className="text-slate-500 text-sm mb-3">Don't have an account?</p>
-            <button onClick={openReg}
-              className="w-full py-3 border-2 border-[#0756B8] text-[#0756B8] font-bold rounded-xl hover:bg-[#F1F6FC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#19C7E8]">
-              Create New Account
-            </button>
-          </div>
+          {loginMode === 'admin' ? (
+            <div className="mt-6 pt-6 border-t border-slate-100 text-center space-y-3">
+              <p className="text-slate-400 text-xs">
+                🔒 Public administrator registration is strictly prohibited. For access requests, please contact Netra AI IT Operations.
+              </p>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setLoginMode('patient');
+                  setLoginError(null);
+                }}
+                className="text-xs text-[#0756B8] hover:underline font-semibold"
+              >
+                ← Back to Patient Login
+              </button>
+            </div>
+          ) : loginMode === 'doctor' ? (
+            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+              <p className="text-slate-500 text-sm mb-3">New ophthalmologist or clinician?</p>
+              <button onClick={() => openReg('doctor')}
+                className="w-full py-3 border-2 border-[#0756B8] text-[#0756B8] font-bold rounded-xl hover:bg-[#F1F6FC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#19C7E8]">
+                Register as Doctor
+              </button>
+            </div>
+          ) : (
+            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+              <p className="text-slate-500 text-sm mb-3">Don't have an account?</p>
+              <button onClick={() => openReg('patient')}
+                className="w-full py-3 border-2 border-[#0756B8] text-[#0756B8] font-bold rounded-xl hover:bg-[#F1F6FC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#19C7E8]">
+                Create New Account
+              </button>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">

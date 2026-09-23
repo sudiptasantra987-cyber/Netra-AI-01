@@ -46,6 +46,16 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     city: Optional[str] = None
     specialization: Optional[str] = None
+    verification_status: Optional[str] = None
+    verification_notes: Optional[str] = None
+
+class PatientEnrollRequest(BaseModel):
+    name: str = Field(..., min_length=2, description="Patient Full Name")
+    age: Optional[int] = Field(None, ge=1, le=120)
+    gender: Optional[str] = None
+    phone: Optional[str] = None
+    city: Optional[str] = None
+    email: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -63,6 +73,10 @@ class UserProfileUpdate(BaseModel):
     state: Optional[str] = None
     pin_code: Optional[str] = None
     bio: Optional[str] = None
+    medical_reg_no: Optional[str] = None
+    qualifications: Optional[str] = None
+    specialization: Optional[str] = None
+    hospital: Optional[str] = None
 
 class UserProfileResponse(BaseModel):
     user_id: str
@@ -78,6 +92,10 @@ class UserProfileResponse(BaseModel):
     state: Optional[str] = ""
     pin_code: Optional[str] = ""
     bio: Optional[str] = ""
+    medical_reg_no: Optional[str] = ""
+    qualifications: Optional[str] = ""
+    specialization: Optional[str] = ""
+    hospital: Optional[str] = ""
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -289,3 +307,216 @@ class PatientTrendSummary(BaseModel):
     trend_direction: str  # "Stable", "Improving", "Deteriorating"
     trend_description: str
     history_points: List[PatientTrendPoint]
+
+# Doctor Portal Clinical Schemas
+class DoctorActivityItem(BaseModel):
+    screening_id: str
+    patient_id: str
+    patient_name: str
+    date: str
+    timestamp: str
+    primary_condition: str
+    risk_level: str
+    risk_score: float
+    review_status: str  # "pending", "reviewed", "needs_further_examination", "recapture_required", "referred"
+    image_url: str
+
+class DoctorDashboardStats(BaseModel):
+    doctor_id: str
+    doctor_name: str
+    total_patients: int
+    reports_awaiting_review: int
+    reports_reviewed: int
+    reports_urgent: int
+    recent_activity: List[DoctorActivityItem] = []
+
+class DoctorPatientSummary(BaseModel):
+    patient_id: str
+    patient_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    city: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    total_screenings: int
+    latest_screening_date: Optional[str] = None
+    latest_condition: Optional[str] = None
+    latest_risk_level: Optional[str] = None
+    latest_review_status: Optional[str] = None
+
+class RetinalFinding(BaseModel):
+    name: str
+    category: str
+    present: bool
+    description: str
+    severity: str  # "Normal", "Mild", "Moderate", "Severe"
+
+class DoctorScreeningDetail(BaseModel):
+    screening_id: str
+    patient_id: str
+    patient_name: str
+    patient_age: Optional[int] = None
+    patient_gender: Optional[str] = None
+    patient_city: Optional[str] = None
+    patient_phone: Optional[str] = None
+    timestamp: str
+    date: str
+    image_url: str
+    quality: QualityMetrics
+    is_gradable: bool
+    primary_condition: str
+    primary_confidence: float
+    all_predictions: List[DiseasePrediction] = []
+    risk_level: str
+    risk_score: float
+    clinical_recommendation: str
+    gradcam_image_base64: Optional[str] = None
+    affected_quadrants: List[str] = []
+    retinal_findings: List[RetinalFinding] = []
+    review_status: str = "pending"  # "pending" | "reviewed" | "needs_further_examination" | "recapture_required" | "referred"
+    clinical_notes: Optional[str] = None
+    diagnosis_confirmed: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    model_version: str = "Netra-EfficientNet-v1.4-XAI"
+
+class ScreeningReviewUpdateRequest(BaseModel):
+    review_status: str = Field(..., description="'reviewed', 'needs_further_examination', 'recapture_required', or 'referred'")
+    clinical_notes: str = Field("", description="Doctor's clinical remarks and ophthalmic findings")
+    diagnosis_confirmed: Optional[str] = Field(None, description="Doctor's verified diagnosis")
+    specialist_referral_notes: Optional[str] = None
+
+class DoctorProfileDetails(BaseModel):
+    id: str
+    name: str
+    email: str
+    phone: Optional[str] = None
+    medical_reg_no: Optional[str] = None
+    qualifications: Optional[str] = None
+    specialization: Optional[str] = None
+    hospital: Optional[str] = None
+    city: Optional[str] = None
+    address: Optional[str] = None
+    profile_picture: Optional[str] = None
+    bio: Optional[str] = None
+
+
+# Admin Portal Schemas
+class AdminActivityItem(BaseModel):
+    id: str
+    title: str
+    category: str  # "Screening", "Doctor Verification", "Patient Registration", "System"
+    timestamp: str
+    time_ago: str
+    type: str  # "info", "success", "warning", "danger"
+
+class AdminDashboardStats(BaseModel):
+    total_patients: int
+    total_doctors: int
+    total_screenings: int
+    reports_awaiting_review: int
+    reports_reviewed: int
+    reports_requiring_attention: int
+    verified_doctors_count: int
+    pending_doctors_count: int
+    recent_activity: List[AdminActivityItem] = []
+
+class AdminPatientItem(BaseModel):
+    id: str
+    name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    city: Optional[str] = None
+    status: str = "active"  # "active" | "inactive"
+    created_at: str
+    screening_count: int = 0
+    last_screening_date: Optional[str] = None
+
+class AdminDoctorItem(BaseModel):
+    id: str
+    name: str
+    email: str
+    phone: Optional[str] = None
+    medical_reg_no: Optional[str] = None
+    qualifications: Optional[str] = None
+    specialization: Optional[str] = None
+    hospital: Optional[str] = None
+    city: Optional[str] = None
+    verification_status: str = "pending"  # "verified" | "pending" | "rejected"
+    status: str = "active"  # "active" | "inactive"
+    screening_count: int = 0
+    created_at: str
+
+class AdminDoctorVerifyRequest(BaseModel):
+    status: Optional[str] = None
+    verification_status: Optional[str] = None
+    notes: Optional[str] = None
+    verification_notes: Optional[str] = None
+
+    def get_status(self) -> str:
+        return (self.status or self.verification_status or "").strip().lower()
+
+    def get_notes(self) -> str:
+        return (self.notes or self.verification_notes or "").strip()
+
+class AccountStatusUpdateRequest(BaseModel):
+    status: str = Field(..., description="'active' or 'inactive'")
+
+class AdminScreeningItem(BaseModel):
+    screening_id: str
+    patient_id: str
+    patient_name: str
+    doctor_id: Optional[str] = None
+    doctor_name: Optional[str] = None
+    date: str
+    timestamp: str
+    primary_condition: str
+    risk_level: str
+    risk_score: float
+    review_status: str
+    is_suitable: bool
+    composite_quality: float
+    technical_status: str  # "normal" | "ungradable" | "low_quality" | "failed_upload"
+    rejection_reasons: List[str] = []
+    image_url: str = ""
+
+class AdminSystemHealth(BaseModel):
+    app_status: str  # "Healthy" | "Degraded" | "Offline"
+    ai_model_status: str  # "Ready" | "Fallback / Heuristic" | "Offline"
+    ai_model_name: str = "Netra-EfficientNet-v1.4-XAI"
+    ai_checkpoint_found: bool = False
+    database_status: str  # "Connected" | "Error"
+    database_records_count: Dict[str, int] = {}
+    backend_uptime_seconds: float = 0.0
+    timestamp: str
+    recent_errors: List[Dict[str, Any]] = []
+
+class AdminAuditLogItem(BaseModel):
+    id: str
+    admin_id: str
+    admin_name: str
+    action: str  # e.g. "INSPECT_REPORT", "VERIFY_DOCTOR", "UPDATE_USER_STATUS", "CHANGE_PASSWORD"
+    resource_type: str
+    resource_id: str
+    timestamp: str
+    details: str
+
+class AdminProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    city: Optional[str] = None
+
+class AdminPasswordChangeRequest(BaseModel):
+    current_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=6)
+    confirm_password: str = Field(..., min_length=6)
+
+class AdminNotificationItem(BaseModel):
+    id: str
+    title: str
+    message: str
+    category: str  # "doctor_verification", "technical_alert", "system_announcement"
+    is_read: bool = False
+    created_at: str
+    action_url: Optional[str] = None
+

@@ -43,7 +43,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ doctor, onClose, onS
         reason: notes || (latestResult ? `Checkup for ${latestResult.primary_condition}` : 'Comprehensive eye checkup'),
         screening_id: latestResult?.screening_id,
         notes: notes || 'Booked via Netra AI patient portal'
-      }, user?.id || 'pat-01', user?.name || 'Sudipta Roy');
+      }, user?.id || 'pat-01', user?.name || '');
       
       onSuccess(apt);
     } catch (err: any) {

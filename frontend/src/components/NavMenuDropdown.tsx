@@ -60,6 +60,12 @@ export const NavMenuDropdown: React.FC<NavMenuDropdownProps> = ({
       icon: LayoutDashboard
     },
     {
+      id: 'screening',
+      label: 'Retinal Screening',
+      description: 'Upload & analyze retinal fundus images with AI',
+      icon: Eye
+    },
+    {
       id: 'profile',
       label: 'Profile',
       description: 'Personal details & ABHA Health ID',
@@ -79,26 +85,23 @@ export const NavMenuDropdown: React.FC<NavMenuDropdownProps> = ({
     },
     {
       id: 'reports',
-      label: 'My Reports',
+      label: 'My Screening Reports',
       description: 'Screening history & visual trajectories',
       icon: FileText
     },
-    {
-      id: 'appointments',
-      label: 'Appointments',
-      description: 'Upcoming consultations & history',
-      icon: Calendar
-    },
+    ...(user?.role !== 'doctor'
+      ? [
+          {
+            id: 'appointments',
+            label: 'Appointments',
+            description: 'Upcoming consultations & history',
+            icon: Calendar
+          }
+        ]
+      : []),
     // Optional role-specific links for doctor/admin users
     ...(user?.role === 'doctor' || user?.role === 'admin'
       ? [
-          {
-            id: 'screening',
-            label: 'New Screening',
-            description: 'Upload & analyze retinal fundus images',
-            icon: Eye,
-            roleFilter: ['doctor', 'admin']
-          },
           {
             id: 'doctor-portal',
             label: 'Doctor Portal',
